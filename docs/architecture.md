@@ -15,6 +15,7 @@
 - `frontend/src/features/tasks/`: task model, API functions, task state/query hooks, task form, filters, and dashboard views.
 - `frontend/src/shared/api/`: shared fetch client, cookie credentials, and consistent API error parsing.
 - `frontend/src/shared/layouts/`: authenticated shell with header, sidebar, responsive navigation, and content region.
+- The shell fills the viewport: the desktop sidebar and header stay fixed, and only the main content panel scrolls vertically. Keep horizontal overflow contained in the content panel. The mobile shell uses a temporary drawer. Preserve these scroll and sizing rules in `TaskShell` when changing navigation or shell layout.
 - `frontend/src/theme/tokens.ts`: the single edit point for brand palette, typography, spacing scale, shape, and elevation values.
 - `frontend/src/theme/theme.ts`: maps tokens into MUI light/dark themes and shared component defaults. UI code should use semantic theme values (`primary.main`, `background.paper`, `text.secondary`, `divider`) instead of hard-coded colors.
 - `frontend/src/index.css`: font loading and minimal document-level reset only; product colors and component styling belong in the MUI theme.

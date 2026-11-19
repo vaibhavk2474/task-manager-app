@@ -32,6 +32,8 @@ const navItems = [
 	{ key: "completed", label: "Completed", Icon: CheckCircleRoundedIcon },
 ] as const;
 
+const getUserInitials = (name = "") => name.trim().split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part.charAt(0)).join("").toUpperCase();
+
 export const TaskShell = ({ children, view, onViewChange, counts, search, onSearchChange, onCreateTask }: TaskShellProps) => {
 	const { user, signOut } = useAuth();
 	const { mode, toggleMode } = useThemeMode();
@@ -42,7 +44,7 @@ export const TaskShell = ({ children, view, onViewChange, counts, search, onSear
 		<Box sx={{ width: designTokens.layout.sidebarWidth, height: "100%", display: "flex", flexDirection: "column", bgcolor: "background.paper" }}>
 			<Box sx={{ px: 2.5, pt: 3, pb: 2.5, display: "flex", alignItems: "center", gap: 1.25 }}>
 				<Box sx={{ width: 36, height: 36, display: "grid", placeItems: "center", borderRadius: 2.5, bgcolor: "primary.main", color: "primary.contrastText" }}><CheckCircleRoundedIcon fontSize="small" /></Box>
-				<Box><Typography variant="subtitle1" sx={{ fontWeight: 800, lineHeight: 1.1 }}>Daymark</Typography><Typography variant="caption" color="text.secondary">PERSONAL WORKSPACE</Typography></Box>
+				<Box><Typography variant="subtitle1" sx={{ fontWeight: 800, lineHeight: 1.1 }}>Task Manager</Typography><Typography variant="caption" color="text.secondary">YOUR WORKSPACE</Typography></Box>
 			</Box>
 			<Box sx={{ px: 2, pb: 2 }}><Button fullWidth startIcon={<AddRoundedIcon />} variant="contained" onClick={onCreateTask}>New task</Button></Box>
 			<Typography variant="overline" color="text.secondary" sx={{ px: 2.5, pb: 0.75, fontWeight: 700, letterSpacing: ".12em" }}>WORKSPACE</Typography>
@@ -58,7 +60,7 @@ export const TaskShell = ({ children, view, onViewChange, counts, search, onSear
 			<Box sx={{ mt: "auto", p: 1.5 }}>
 				<Divider sx={{ mb: 1.5 }} />
 				<Box sx={{ display: "flex", alignItems: "center", gap: 1.2, p: 1 }}>
-					<Avatar sx={{ width: 34, height: 34, bgcolor: "secondary.main", color: "text.primary", fontSize: 13, fontWeight: 800 }}>{user?.name.slice(0, 1).toUpperCase()}</Avatar>
+					<Avatar sx={{ width: 34, height: 34, bgcolor: "secondary.main", color: "text.primary", fontSize: 13, fontWeight: 800 }}>{getUserInitials(user?.name) || "?"}</Avatar>
 					<Box sx={{ minWidth: 0, flex: 1 }}><Typography variant="body2" sx={{ fontWeight: 700 }} noWrap>{user?.name}</Typography><Typography variant="caption" color="text.secondary" noWrap>{user?.email}</Typography></Box>
 					<Tooltip title="Sign out"><IconButton size="small" onClick={handleSignOut} aria-label="Sign out"><LogoutRoundedIcon fontSize="small" /></IconButton></Tooltip>
 				</Box>
@@ -68,22 +70,22 @@ export const TaskShell = ({ children, view, onViewChange, counts, search, onSear
 	);
 
 	return (
-		<Box sx={{ minHeight: "100vh", display: "flex", bgcolor: "background.default" }}>
-			<Box sx={{ width: designTokens.layout.sidebarWidth, flexShrink: 0, borderRight: 1, borderColor: "divider", display: { xs: "none", md: "block" } }}>{sidebar}</Box>
+		<Box sx={{ width: "100%", height: "100dvh", minHeight: 0, overflow: "hidden", display: "flex", bgcolor: "background.default" }}>
+			<Box sx={{ position: "fixed", insetBlock: 0, left: 0, zIndex: 10, width: designTokens.layout.sidebarWidth, height: "100dvh", overflow: "hidden", borderRight: 1, borderColor: "divider", display: { xs: "none", md: "block" } }}>{sidebar}</Box>
 			<Drawer open={mobileOpen} onClose={() => setMobileOpen(false)} sx={{ display: { xs: "block", md: "none" }, "& .MuiDrawer-paper": { border: 0 } }}>{sidebar}</Drawer>
-			<Box component="main" sx={{ minWidth: 0, flex: 1 }}>
-				<Box component="header" sx={{ height: designTokens.layout.headerHeight, px: { xs: 2, md: 4 }, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2, bgcolor: "background.paper", borderBottom: 1, borderColor: "divider", position: "sticky", top: 0, zIndex: 5 }}>
+			<Box component="main" sx={{ minWidth: 0, width: { xs: "100%", md: `calc(100% - ${designTokens.layout.sidebarWidth}px)` }, height: "100dvh", ml: { xs: 0, md: `${designTokens.layout.sidebarWidth}px` }, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+				<Box component="header" sx={{ height: designTokens.layout.headerHeight, minHeight: designTokens.layout.headerHeight, minWidth: 0, flexShrink: 0, px: { xs: 1.5, md: 4 }, display: "flex", alignItems: "center", justifyContent: "space-between", gap: { xs: 1, md: 2 }, bgcolor: "background.paper", borderBottom: 1, borderColor: "divider", zIndex: 5 }}>
 					<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
 						<IconButton onClick={() => setMobileOpen(true)} sx={{ display: { xs: "inline-flex", md: "none" } }} aria-label="Open navigation"><MenuRoundedIcon /></IconButton>
 						<Typography variant="body2" color="text.secondary" sx={{ display: { xs: "none", sm: "block" } }}>Workspace <Box component="span" sx={{ mx: 1, color: "divider" }}>/</Box></Typography>
 						<Typography variant="body2" sx={{ fontWeight: 700 }}>{navItems.find((item) => item.key === view)?.label}</Typography>
 					</Box>
 					<Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-						<TextField size="small" placeholder="Search tasks" value={search} onChange={(event) => onSearchChange(event.target.value)} sx={{ width: { xs: 150, sm: 230 }, "& .MuiOutlinedInput-root": { bgcolor: "background.default" } }} slotProps={{ input: { startAdornment: <InputAdornment position="start"><SearchRoundedIcon fontSize="small" color="action" /></InputAdornment> } }} />
+						<TextField size="small" placeholder="Search tasks" value={search} onChange={(event) => onSearchChange(event.target.value)} sx={{ width: { xs: 128, sm: 230 }, "& .MuiOutlinedInput-root": { bgcolor: "background.default" } }} slotProps={{ input: { startAdornment: <InputAdornment position="start"><SearchRoundedIcon fontSize="small" color="action" /></InputAdornment> } }} />
 						<Button variant="contained" startIcon={<AddRoundedIcon />} onClick={onCreateTask} sx={{ display: { xs: "none", sm: "inline-flex" } }}>New task</Button>
 					</Box>
 				</Box>
-				<Box sx={{ px: { xs: 2, sm: 3, lg: 5 }, py: { xs: 3, md: 5 } }}>{children}</Box>
+				<Box sx={{ flex: 1, minWidth: 0, minHeight: 0, overflowY: "auto", overflowX: "hidden", px: { xs: 2, sm: 3, lg: 5 }, py: { xs: 3, md: 5 } }}>{children}</Box>
 			</Box>
 		</Box>
 	);

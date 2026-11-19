@@ -11,7 +11,7 @@ export const AuthLayout = ({ title, subtitle, children, footer }: { title: strin
 					<Box sx={{ display: "grid", placeItems: "center", width: 54, height: 54, borderRadius: 3, bgcolor: "primary.main", color: "primary.contrastText", boxShadow: "0 12px 28px rgba(39,105,93,.22)" }}>
 						<CheckRoundedIcon fontSize="large" />
 					</Box>
-					<Typography variant="h5" sx={{ fontWeight: 800 }}>Daymark</Typography>
+					<Typography variant="h5" sx={{ fontWeight: 800 }}>Task Manager</Typography>
 				</Stack>
 				<Paper variant="outlined" sx={{ p: { xs: 3, sm: 4 }, borderColor: "divider", boxShadow: "0 24px 70px rgba(24,49,41,.08)" }}>
 					<Stack spacing={2.75}>
