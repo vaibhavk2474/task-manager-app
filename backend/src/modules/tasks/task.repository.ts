@@ -5,8 +5,11 @@ import type { TaskAttributes, TaskPriority, TaskStatus } from "./task.model.js";
 type TaskFilter = QueryFilter<TaskAttributes>;
 
 export const taskRepository = {
-	listForOwner(ownerId: string, filter: TaskFilter) {
-		return TaskModel.find({ ownerId: new Types.ObjectId(ownerId), ...filter }).sort({ dueDate: 1, updatedAt: -1 });
+	listForOwner(ownerId: string, filter: TaskFilter, pagination: { skip: number; limit: number }) {
+		return TaskModel.find({ ownerId: new Types.ObjectId(ownerId), ...filter })
+			.sort({ dueDate: 1, dueAt: 1, updatedAt: -1, _id: 1 })
+			.skip(pagination.skip)
+			.limit(pagination.limit);
 	},
 	countForOwner(ownerId: string, filter: TaskFilter = {}) {
 		return TaskModel.countDocuments({ ownerId: new Types.ObjectId(ownerId), ...filter });

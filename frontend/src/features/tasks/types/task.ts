@@ -27,4 +27,6 @@ export interface TaskInput {
 export interface TaskListResponse {
 	tasks: Task[];
 	counts: { all: number; today: number; upcoming: number; overdue: number; completed: number };
+	pagination: { page: number; pageSize: number; totalItems: number; totalPages: number };
+	previews?: { today: Task[]; upcoming: Task[]; overdue: Task[] };
 }

@@ -8,15 +8,19 @@ import { TaskTable } from "../components/TaskTable";
 import { TaskViewToggle, type TaskDisplayMode } from "../components/TaskViewToggle";
 import { TaskFormDialog } from "../components/TaskFormDialog";
 import { useTasks } from "../hooks/useTasks";
-import type { Task, TaskInput, TaskPageView, TaskView } from "../types/task";
+import type { Task, TaskInput, TaskListResponse, TaskPageView, TaskView } from "../types/task";
+
+const emptyPreviews: NonNullable<TaskListResponse["previews"]> = { today: [], upcoming: [], overdue: [] };
 
 export const TasksPage = () => {
 	const [view, setView] = useState<TaskPageView>("overview");
 	const [search, setSearch] = useState("");
 	const [displayMode, setDisplayMode] = useState<TaskDisplayMode>("cards");
 	const [page, setPage] = useState(1);
+	const dashboard = view === "overview";
+	const pageSize = dashboard ? 1 : displayMode === "cards" ? 8 : 10;
 	const listView: TaskView = view === "overview" ? "all" : view;
-	const { tasks, counts, isLoading, error, create, update, remove } = useTasks(listView, view === "overview" ? "" : search);
+	const { tasks, counts, pagination, previews, isLoading, error, create, update, remove } = useTasks(listView, dashboard ? "" : search, page, pageSize, dashboard);
 	const [dialogOpen, setDialogOpen] = useState(false);
 	const [editingTask, setEditingTask] = useState<Task | null>(null);
 	const [saving, setSaving] = useState(false);
@@ -63,20 +67,17 @@ export const TasksPage = () => {
 		finally { setDeleting(false); }
 	};
 
-	const dashboard = view === "overview";
-	const pageSize = displayMode === "cards" ? 8 : 10;
-	const pageCount = Math.max(1, Math.ceil(tasks.length / pageSize));
-	const currentPage = Math.min(page, pageCount);
-	const visibleTasks = tasks.slice((currentPage - 1) * pageSize, currentPage * pageSize);
-	const rangeStart = tasks.length ? (currentPage - 1) * pageSize + 1 : 0;
-	const rangeEnd = Math.min(currentPage * pageSize, tasks.length);
+	const pageCount = Math.max(1, pagination.totalPages);
+	const currentPage = pagination.page;
+	const rangeStart = pagination.totalItems ? (currentPage - 1) * pagination.pageSize + 1 : 0;
+	const rangeEnd = Math.min(currentPage * pagination.pageSize, pagination.totalItems);
 
 	return (
 		<TaskShell view={view} onViewChange={navigate} search={search} onSearchChange={changeSearch} onCreateTask={openCreate} showSearch={!dashboard}>
 			{dashboard ? (
 				<>
 					{error && <Alert severity="error" sx={{ maxWidth: 1120, mx: "auto", mb: 2 }}>{error}</Alert>}
-					<OverviewDashboard tasks={tasks} counts={counts} isLoading={isLoading} now={now} onViewChange={navigate} onCreate={openCreate} onEdit={openEdit} onDelete={setDeleteTarget} onUpdate={updateTask} />
+					<OverviewDashboard previews={previews ?? emptyPreviews} counts={counts} isLoading={isLoading} now={now} onViewChange={navigate} onCreate={openCreate} onEdit={openEdit} onDelete={setDeleteTarget} onUpdate={updateTask} />
 				</>
 			) : (
 				<Box sx={{ maxWidth: 1120, mx: "auto" }}>
@@ -94,15 +95,15 @@ export const TasksPage = () => {
 						<TaskViewToggle value={displayMode} onChange={changeDisplayMode} />
 					</Stack>
 					{error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-					{tasks.length === 0 ? (
+					{pagination.totalItems === 0 ? (
 						<TaskList tasks={[]} view={listView} isLoading={isLoading} search={search} now={now} onCreate={openCreate} onEdit={openEdit} onDelete={setDeleteTarget} onUpdate={updateTask} />
 					) : displayMode === "cards" ? (
-						<TaskList tasks={visibleTasks} view={listView} isLoading={isLoading} search={search} now={now} onCreate={openCreate} onEdit={openEdit} onDelete={setDeleteTarget} onUpdate={updateTask} />
+						<TaskList tasks={tasks} view={listView} isLoading={isLoading} search={search} now={now} onCreate={openCreate} onEdit={openEdit} onDelete={setDeleteTarget} onUpdate={updateTask} />
 					) : (
-						<TaskTable tasks={visibleTasks} isLoading={isLoading} now={now} onEdit={openEdit} onDelete={setDeleteTarget} onUpdate={updateTask} />
+						<TaskTable tasks={tasks} isLoading={isLoading} now={now} onEdit={openEdit} onDelete={setDeleteTarget} onUpdate={updateTask} />
 					)}
-					{tasks.length > 0 && <Stack direction={{ xs: "column", sm: "row" }} sx={{ alignItems: { xs: "flex-start", sm: "center" }, justifyContent: "space-between", gap: 1.5, mt: 2.5 }}>
-						<Typography variant="body2" color="text.secondary">Showing {rangeStart}–{rangeEnd} of {tasks.length} tasks</Typography>
+					{pagination.totalItems > 0 && <Stack direction={{ xs: "column", sm: "row" }} sx={{ alignItems: { xs: "flex-start", sm: "center" }, justifyContent: "space-between", gap: 1.5, mt: 2.5 }}>
+						<Typography variant="body2" color="text.secondary">Showing {rangeStart}–{rangeEnd} of {pagination.totalItems} tasks</Typography>
 						{pageCount > 1 && <Pagination count={pageCount} page={currentPage} onChange={(_event, nextPage) => setPage(nextPage)} color="primary" size="small" shape="rounded" aria-label="Task pages" />}
 					</Stack>}
 				</Box>

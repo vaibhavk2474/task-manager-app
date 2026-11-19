@@ -1,11 +1,12 @@
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "caseSensitive": true,
-      "dest": "${RENDER_API_URL}/api/$1",
-      "env": ["RENDER_API_URL"]
-    }
-  ]
+	"$schema": "https://openapi.vercel.sh/vercel.json",
+	"routes": [
+		{
+			"src": "/api/(.*)",
+			"caseSensitive": true,
+			"dest": "${RENDER_API_URL}/api/$1",
+			"env": ["RENDER_API_URL"]
+		}
+	],
+	"rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
 }

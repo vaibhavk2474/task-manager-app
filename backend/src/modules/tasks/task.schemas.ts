@@ -48,5 +48,8 @@ export const listTasksSchema = z.object({
 	view: z.enum(["all", "today", "upcoming", "overdue", "completed"]).default("all"),
 	search: z.string().trim().max(120).default(""),
 	timeZone: z.string().trim().min(1).max(80).default("UTC").refine(isValidTimeZone, "Invalid time zone."),
+	page: z.coerce.number().int().min(1).default(1),
+	pageSize: z.coerce.number().int().min(1).max(100).default(25),
+	includePreviews: z.enum(["true", "false"]).default("false").transform((value) => value === "true"),
 });
 export const taskIdSchema = z.string().regex(/^[a-f\d]{24}$/i, "Task was not found.");

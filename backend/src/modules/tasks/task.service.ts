@@ -106,7 +106,7 @@ const dueAtFromInput = (dateTime: string | null | undefined) => dateTime ? new D
 const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 export const taskService = {
-	async list(ownerId: string, view: TaskView, search: string, timeZone: string) {
+	async list(ownerId: string, view: TaskView, search: string, timeZone: string, requestedPage: number, pageSize: number, includePreviews: boolean) {
 		const now = new Date();
 		const window = getZonedDayWindow(now, timeZone);
 		const searchFilter: TaskFilter = search
@@ -138,15 +138,32 @@ export const taskService = {
 				{ dueAt: null, dueDate: { $ne: null, $lt: window.todayMarker } },
 			],
 		};
-		const [tasks, all, today, upcoming, overdue, completed] = await Promise.all([
-			taskRepository.listForOwner(ownerId, filter),
+		const [all, today, upcoming, overdue, completed, matchingSearchTotal] = await Promise.all([
 			taskRepository.countForOwner(ownerId),
 			taskRepository.countForOwner(ownerId, todayFilter),
 			taskRepository.countForOwner(ownerId, upcomingFilter),
 			taskRepository.countForOwner(ownerId, overdueFilter),
 			taskRepository.countForOwner(ownerId, { status: "done" }),
+			search ? taskRepository.countForOwner(ownerId, filter) : Promise.resolve(null),
 		]);
-		return { tasks, counts: { all, today, upcoming, overdue, completed } };
+		const counts = { all, today, upcoming, overdue, completed };
+		const matchingViewTotal = search ? matchingSearchTotal ?? 0 : counts[view];
+		const totalPages = Math.ceil(matchingViewTotal / pageSize);
+		const page = Math.min(requestedPage, Math.max(1, totalPages));
+		const [tasks, previews] = await Promise.all([
+			taskRepository.listForOwner(ownerId, filter, { skip: (page - 1) * pageSize, limit: pageSize }),
+			includePreviews ? Promise.all([
+				taskRepository.listForOwner(ownerId, todayFilter, { skip: 0, limit: 4 }),
+				taskRepository.listForOwner(ownerId, upcomingFilter, { skip: 0, limit: 4 }),
+				taskRepository.listForOwner(ownerId, overdueFilter, { skip: 0, limit: 4 }),
+			]).then(([todayTasks, upcomingTasks, overdueTasks]) => ({ today: todayTasks, upcoming: upcomingTasks, overdue: overdueTasks })) : Promise.resolve(undefined),
+		]);
+		return {
+			tasks,
+			counts,
+			pagination: { page, pageSize, totalItems: matchingViewTotal, totalPages },
+			...(previews ? { previews } : {}),
+		};
 	},
 	create(ownerId: string, data: { title: string; description: string; status: TaskStatus; priority: TaskPriority; dueDate: string | null; dueAt: string | null }) {
 		return taskRepository.createForOwner(ownerId, { ...data, dueDate: dateFromInput(data.dueDate), dueAt: dueAtFromInput(data.dueAt) });

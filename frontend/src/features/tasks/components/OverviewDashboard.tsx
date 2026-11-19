@@ -6,11 +6,10 @@ import EventNoteOutlinedIcon from "@mui/icons-material/EventNoteOutlined";
 import InsightsRoundedIcon from "@mui/icons-material/InsightsRounded";
 import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
 import { TaskList } from "./TaskList";
-import { isTaskOverdue, localDateKey } from "../utils/deadline";
-import type { Task, TaskInput, TaskPageView } from "../types/task";
+import type { Task, TaskInput, TaskPageView, TaskListResponse } from "../types/task";
 
 interface OverviewDashboardProps {
-	tasks: Task[];
+	previews: NonNullable<TaskListResponse["previews"]>;
 	counts: { all: number; today: number; upcoming: number; overdue: number; completed: number };
 	isLoading: boolean;
 	now: Date;
@@ -21,12 +20,8 @@ interface OverviewDashboardProps {
 	onUpdate: (taskId: string, data: Partial<TaskInput>) => Promise<unknown>;
 }
 
-export const OverviewDashboard = ({ tasks, counts, isLoading, now, onViewChange, onCreate, onEdit, onDelete, onUpdate }: OverviewDashboardProps) => {
-	const today = localDateKey(now);
-	const byDeadline = (first: Task, second: Task) => deadlineOrder(first) - deadlineOrder(second);
-	const todayTasks = tasks.filter((task) => task.status !== "done" && task.dueDate === today && !isTaskOverdue(task, now)).sort(byDeadline);
-	const upcomingTasks = tasks.filter((task) => task.status !== "done" && task.dueDate !== null && task.dueDate > today).sort(byDeadline);
-	const overdueTasks = tasks.filter((task) => isTaskOverdue(task, now)).sort(byDeadline);
+export const OverviewDashboard = ({ previews, counts, isLoading, now, onViewChange, onCreate, onEdit, onDelete, onUpdate }: OverviewDashboardProps) => {
+	const { today: todayTasks, upcoming: upcomingTasks, overdue: overdueTasks } = previews;
 	const openCount = counts.all - counts.completed;
 	const completionRate = counts.all ? Math.round((counts.completed / counts.all) * 100) : 0;
 
@@ -101,5 +96,3 @@ const SummaryCard = ({ label, value, note, icon, alert = false, onClick }: { lab
 		</CardActionArea>
 	</Card>
 );
-
-const deadlineOrder = (task: Task) => task.dueAt ? new Date(task.dueAt).getTime() : task.dueDate ? new Date(`${task.dueDate}T12:00:00`).getTime() : Number.MAX_SAFE_INTEGER;

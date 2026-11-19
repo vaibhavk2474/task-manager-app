@@ -3,10 +3,13 @@ import { tasksApi } from "../api/tasksApi";
 import type { Task, TaskInput, TaskListResponse, TaskView } from "../types/task";
 
 const emptyCounts: TaskListResponse["counts"] = { all: 0, today: 0, upcoming: 0, overdue: 0, completed: 0 };
+const emptyPagination: TaskListResponse["pagination"] = { page: 1, pageSize: 25, totalItems: 0, totalPages: 0 };
 
-export const useTasks = (view: TaskView, search: string) => {
+export const useTasks = (view: TaskView, search: string, page: number, pageSize: number, includePreviews = false) => {
 	const [tasks, setTasks] = useState<Task[]>([]);
 	const [counts, setCounts] = useState(emptyCounts);
+	const [pagination, setPagination] = useState(emptyPagination);
+	const [previews, setPreviews] = useState<TaskListResponse["previews"]>();
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState("");
 
@@ -14,13 +17,15 @@ export const useTasks = (view: TaskView, search: string) => {
 		if (!background) setIsLoading(true);
 		setError("");
 		try {
-			const result = await tasksApi.list(view, search);
+			const result = await tasksApi.list(view, search, page, pageSize, includePreviews);
 			setTasks(result.tasks);
 			setCounts(result.counts);
+			setPagination(result.pagination);
+			setPreviews(result.previews);
 		} catch (caught) {
 			setError(caught instanceof Error ? caught.message : "Could not load your tasks.");
 		} finally { if (!background) setIsLoading(false); }
-	}, [view, search]);
+	}, [view, search, page, pageSize, includePreviews]);
 
 	useEffect(() => {
 		const timer = window.setTimeout(() => { void refresh(); }, 220);
@@ -36,5 +41,5 @@ export const useTasks = (view: TaskView, search: string) => {
 	const update = async (id: string, data: Partial<TaskInput>) => { const result = await tasksApi.update(id, data); await refresh(); return result.task; };
 	const remove = async (id: string) => { await tasksApi.remove(id); await refresh(); };
 
-	return { tasks, counts, isLoading, error, refresh, create, update, remove };
+	return { tasks, counts, pagination, previews, isLoading, error, refresh, create, update, remove };
 };

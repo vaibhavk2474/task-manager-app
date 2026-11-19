@@ -24,9 +24,14 @@ const respondWithError = (error: unknown, response: Parameters<RequestHandler>[1
 
 export const listTasks: RequestHandler = async (request, response, next) => {
 	try {
-		const filters = response.locals.taskFilters as { view: "all" | "today" | "upcoming" | "overdue" | "completed"; search: string; timeZone: string };
-		const result = await taskService.list(request.session.userId!, filters.view, filters.search, filters.timeZone);
-		response.json({ tasks: result.tasks.map(serializeTask), counts: result.counts });
+		const filters = response.locals.taskFilters as { view: "all" | "today" | "upcoming" | "overdue" | "completed"; search: string; timeZone: string; page: number; pageSize: number; includePreviews: boolean };
+		const result = await taskService.list(request.session.userId!, filters.view, filters.search, filters.timeZone, filters.page, filters.pageSize, filters.includePreviews);
+		response.json({
+			tasks: result.tasks.map(serializeTask),
+			counts: result.counts,
+			pagination: result.pagination,
+			...(result.previews ? { previews: { today: result.previews.today.map(serializeTask), upcoming: result.previews.upcoming.map(serializeTask), overdue: result.previews.overdue.map(serializeTask) } } : {}),
+		});
 	} catch (error) { respondWithError(error, response, next); }
 };
 
