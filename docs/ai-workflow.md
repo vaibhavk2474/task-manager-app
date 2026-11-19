@@ -49,3 +49,9 @@ Read AGENTS.md, docs/product.md, and the relevant architecture section. Keep dat
 - Read the deadline semantics in `AGENTS.md` and `docs/architecture.md` before changing deadline behavior.
 - Preserve the distinction between a date-only all-day deadline and an exact timed instant. Keep `dueDate` and `dueAt` paired on API updates, and send the browser's IANA time zone when querying local-day filters.
 - When changing overdue behavior, account for time-zone day boundaries, completed tasks, tasks with no deadline, and deadlines that pass while the task list remains open.
+
+## Overview dashboard guidance
+
+- Keep overview cards and previews derived from the authenticated task API response. Do not add a second browser-side task store or duplicate dashboard-specific task endpoints without a product need.
+- Reuse the shared deadline helpers when grouping Today, Upcoming, or Overdue tasks. Summary card actions should take the user to the corresponding existing task filter.
+- Keep Overview useful on narrow screens: collapse metric and preview grids, keep the main page as the only scroll area, and use the shared MUI theme values.

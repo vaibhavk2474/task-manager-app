@@ -17,21 +17,23 @@ interface TaskListProps {
 	onDelete: (task: Task) => void;
 	onUpdate: (taskId: string, data: Partial<TaskInput>) => Promise<unknown>;
 	now: Date;
+	emptyState?: { title: string; description: string };
+	showCreateOnEmpty?: boolean;
 }
 
 const priorityColor = (priority: Task["priority"]): "default" | "warning" | "error" => priority === "high" ? "error" : priority === "medium" ? "warning" : "default";
 const statusLabel = (status: Task["status"]) => status === "in_progress" ? "In progress" : status === "done" ? "Completed" : "To do";
 
-export const TaskList = ({ tasks, view, isLoading, search, onCreate, onEdit, onDelete, onUpdate, now }: TaskListProps) => {
+export const TaskList = ({ tasks, view, isLoading, search, onCreate, onEdit, onDelete, onUpdate, now, emptyState, showCreateOnEmpty = true }: TaskListProps) => {
 	if (isLoading && tasks.length === 0) return <Box sx={{ py: 10, display: "grid", placeItems: "center" }}><CircularProgress /></Box>;
 	if (!tasks.length) {
 		return (
 			<Card variant="outlined" sx={{ borderStyle: "dashed", bgcolor: "transparent", textAlign: "center", py: 7, px: 2 }}>
 				<CardContent>
 					<Box sx={{ width: 58, height: 58, mx: "auto", mb: 2, display: "grid", placeItems: "center", borderRadius: "50%", bgcolor: "action.hover", color: view === "overdue" ? "success.main" : "primary.main" }}>{view === "overdue" ? <CheckCircleOutlineRoundedIcon fontSize="large" /> : <AddRoundedIcon fontSize="large" />}</Box>
-					<Typography variant="h6" gutterBottom sx={{ fontWeight: 800 }}>{search ? "No matching tasks" : view === "completed" ? "Nothing completed yet" : view === "overdue" ? "You are all caught up" : "A clear space to begin"}</Typography>
-					<Typography color="text.secondary" sx={{ mb: 2.5 }}>{search ? "Try another search or clear the search field." : view === "overdue" ? "There are no overdue tasks right now." : "Add a task and give your day a little direction."}</Typography>
-					{view !== "completed" && view !== "overdue" && !search && <Button variant="contained" startIcon={<AddRoundedIcon />} onClick={onCreate}>Create your first task</Button>}
+					<Typography variant="h6" gutterBottom sx={{ fontWeight: 800 }}>{emptyState?.title ?? (search ? "No matching tasks" : view === "completed" ? "Nothing completed yet" : view === "overdue" ? "You are all caught up" : "A clear space to begin")}</Typography>
+					<Typography color="text.secondary" sx={{ mb: 2.5 }}>{emptyState?.description ?? (search ? "Try another search or clear the search field." : view === "overdue" ? "There are no overdue tasks right now." : "Add a task and give your day a little direction.")}</Typography>
+					{showCreateOnEmpty && view !== "completed" && view !== "overdue" && !search && <Button variant="contained" startIcon={<AddRoundedIcon />} onClick={onCreate}>Create your first task</Button>}
 				</CardContent>
 			</Card>
 		);

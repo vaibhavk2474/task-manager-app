@@ -12,7 +12,7 @@
 
 - `frontend/src/app/`: route configuration and provider composition.
 - `frontend/src/features/auth/`: sign-in/sign-up screens, auth API, session context, and route guards.
-- `frontend/src/features/tasks/`: task model, API functions, task state/query hooks, task form, filters, and dashboard views.
+- `frontend/src/features/tasks/`: task model, API functions, task state/query hooks, task form, filters, and dashboard views. `components/OverviewDashboard.tsx` derives its previews from the same owner-scoped task response and count summary used by the task list; keep date grouping aligned with `utils/deadline.ts` and the API's time-zone-aware filters.
 - `frontend/src/shared/api/`: shared fetch client, cookie credentials, and consistent API error parsing.
 - `frontend/src/shared/layouts/`: authenticated shell with header, sidebar, responsive navigation, and content region.
 - The shell fills the viewport: the desktop sidebar and header stay fixed, and only the main content panel scrolls vertically. Keep horizontal overflow contained in the content panel. The mobile shell uses a temporary drawer. Preserve these scroll and sizing rules in `TaskShell` when changing navigation or shell layout.

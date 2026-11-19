@@ -4,6 +4,7 @@ A focused, full-stack task manager built with React, TypeScript, Vite, Material 
 
 ## Product capabilities
 
+- Review due-today, upcoming, overdue, and completion progress from the Overview dashboard.
 - Create, view, update, complete, search, filter, and delete tasks.
 - Set a task title, description, status, priority, and optional due date and time.
 - Review overdue open tasks in a dedicated filter and overview count.
