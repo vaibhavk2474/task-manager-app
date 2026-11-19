@@ -55,3 +55,4 @@ Read AGENTS.md, docs/product.md, and the relevant architecture section. Keep dat
 - Keep overview cards and previews derived from the authenticated task API response. Do not add a second browser-side task store or duplicate dashboard-specific task endpoints without a product need.
 - Reuse the shared deadline helpers when grouping Today, Upcoming, or Overdue tasks. Summary card actions should take the user to the corresponding existing task filter.
 - Keep Overview useful on narrow screens: collapse metric and preview grids, keep the main page as the only scroll area, and use the shared MUI theme values.
+- Keep sidebar destinations limited to Overview and All tasks. Place task filters beside the All tasks heading, allow the controls to wrap on small screens, and ensure Overview card links select the corresponding filter without making a filter appear as a separate sidebar destination.

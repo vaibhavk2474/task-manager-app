@@ -6,7 +6,7 @@ This is a planning guide, not a commitment. Keep each milestone small and based 
 
 - Account registration, sign-in, session restore, and sign-out.
 - Owner-scoped MongoDB task CRUD.
-- All/today/upcoming/overdue/completed filters, search, priority, and optional date/time deadlines.
+- Overview and All tasks navigation, with All/today/upcoming/overdue/completed filters, search, priority, and optional date/time deadlines.
 - Responsive Overview dashboard with today's focus, upcoming tasks, overdue visibility, and completion progress.
 - Centralized light/dark theme.
 

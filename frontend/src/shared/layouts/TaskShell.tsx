@@ -1,9 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { Avatar, Box, Button, Divider, Drawer, IconButton, InputAdornment, List, ListItemButton, ListItemIcon, ListItemText, TextField, Tooltip, Typography } from "@mui/material";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import CalendarTodayRoundedIcon from "@mui/icons-material/CalendarTodayRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
-import EventBusyRoundedIcon from "@mui/icons-material/EventBusyRounded";
 import FormatListBulletedRoundedIcon from "@mui/icons-material/FormatListBulletedRounded";
 import LightModeRoundedIcon from "@mui/icons-material/LightModeRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
@@ -11,9 +9,8 @@ import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import DarkModeRoundedIcon from "@mui/icons-material/DarkModeRounded";
 import DashboardRoundedIcon from "@mui/icons-material/DashboardRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
-import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
 import { useAuth } from "../../features/auth/context/useAuth";
-import type { TaskPageView, TaskView } from "../../features/tasks/types/task";
+import type { TaskPageView } from "../../features/tasks/types/task";
 import { designTokens } from "../../theme/tokens";
 import { useThemeMode } from "../../theme/useThemeMode";
 
@@ -21,7 +18,6 @@ interface TaskShellProps {
 	children: ReactNode;
 	view: TaskPageView;
 	onViewChange: (view: TaskPageView) => void;
-	counts: { all: number; today: number; upcoming: number; overdue: number; completed: number };
 	search: string;
 	onSearchChange: (value: string) => void;
 	onCreateTask: () => void;
@@ -31,15 +27,11 @@ interface TaskShellProps {
 const navItems = [
 	{ key: "overview", label: "Overview", Icon: DashboardRoundedIcon },
 	{ key: "all", label: "All tasks", Icon: FormatListBulletedRoundedIcon },
-	{ key: "today", label: "Today", Icon: CalendarTodayRoundedIcon },
-	{ key: "upcoming", label: "Upcoming", Icon: TaskAltRoundedIcon },
-	{ key: "overdue", label: "Overdue", Icon: EventBusyRoundedIcon },
-	{ key: "completed", label: "Completed", Icon: CheckCircleRoundedIcon },
 ] as const;
 
 const getUserInitials = (name = "") => name.trim().split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part.charAt(0)).join("").toUpperCase();
 
-export const TaskShell = ({ children, view, onViewChange, counts, search, onSearchChange, onCreateTask, showSearch = true }: TaskShellProps) => {
+export const TaskShell = ({ children, view, onViewChange, search, onSearchChange, onCreateTask, showSearch = true }: TaskShellProps) => {
 	const { user, signOut } = useAuth();
 	const { mode, toggleMode } = useThemeMode();
 	const [mobileOpen, setMobileOpen] = useState(false);
@@ -55,10 +47,9 @@ export const TaskShell = ({ children, view, onViewChange, counts, search, onSear
 			<Typography variant="overline" color="text.secondary" sx={{ px: 2.5, pb: 0.75, fontWeight: 700, letterSpacing: ".12em" }}>WORKSPACE</Typography>
 			<List sx={{ px: 1.25, py: 0 }}>
 				{navItems.map(({ key, label, Icon }) => (
-					<ListItemButton key={key} selected={view === key} onClick={() => { onViewChange(key); setMobileOpen(false); }} sx={{ borderRadius: 2.5, mb: 0.5, minHeight: 46, "&.Mui-selected": { bgcolor: "action.selected", color: "primary.main" }, "&.Mui-selected:hover": { bgcolor: "action.selected" } }}>
+					<ListItemButton key={key} selected={key === (view === "overview" ? "overview" : "all")} onClick={() => { onViewChange(key); setMobileOpen(false); }} sx={{ borderRadius: 2.5, mb: 0.5, minHeight: 46, "&.Mui-selected": { bgcolor: "action.selected", color: "primary.main" }, "&.Mui-selected:hover": { bgcolor: "action.selected" } }}>
 						<ListItemIcon sx={{ minWidth: 38, color: "inherit" }}><Icon fontSize="small" /></ListItemIcon>
-						<ListItemText primary={label} sx={{ "& .MuiListItemText-primary": { fontSize: 14, fontWeight: view === key ? 700 : 550 } }} />
-						{key !== "overview" && <Typography variant="caption" color="text.secondary">{counts[key]}</Typography>}
+						<ListItemText primary={label} sx={{ "& .MuiListItemText-primary": { fontSize: 14, fontWeight: key === (view === "overview" ? "overview" : "all") ? 700 : 550 } }} />
 					</ListItemButton>
 				))}
 			</List>
@@ -83,7 +74,7 @@ export const TaskShell = ({ children, view, onViewChange, counts, search, onSear
 					<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
 						<IconButton onClick={() => setMobileOpen(true)} sx={{ display: { xs: "inline-flex", md: "none" } }} aria-label="Open navigation"><MenuRoundedIcon /></IconButton>
 						<Typography variant="body2" color="text.secondary" sx={{ display: { xs: "none", sm: "block" } }}>Workspace <Box component="span" sx={{ mx: 1, color: "divider" }}>/</Box></Typography>
-						<Typography variant="body2" sx={{ fontWeight: 700 }}>{navItems.find((item) => item.key === view)?.label}</Typography>
+						<Typography variant="body2" sx={{ fontWeight: 700 }}>{view === "overview" ? "Overview" : "All tasks"}</Typography>
 					</Box>
 					<Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
 						{showSearch && <TextField size="small" placeholder="Search tasks" value={search} onChange={(event) => onSearchChange(event.target.value)} sx={{ width: { xs: 128, sm: 230 }, "& .MuiOutlinedInput-root": { bgcolor: "background.default" } }} slotProps={{ input: { startAdornment: <InputAdornment position="start"><SearchRoundedIcon fontSize="small" color="action" /></InputAdornment> } }} />}

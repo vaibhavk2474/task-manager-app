@@ -90,7 +90,7 @@ const TaskSection = ({ title, count, onViewAll, children }: { title: string; cou
 );
 
 const SummaryCard = ({ label, value, note, icon, alert = false, onClick }: { label: string; value: string; note: string; icon: ReactNode; alert?: boolean; onClick: () => void }) => (
-	<Card variant="outlined" sx={{ borderColor: "divider", height: "100%" }}>
+	<Card variant="outlined" sx={{ borderColor: "divider", height: "100%", minHeight: 116 }}>
 		<CardActionArea onClick={onClick} sx={{ height: "100%" }}>
 			<CardContent sx={{ p: "18px 20px !important" }}>
 				<Stack direction="row" sx={{ alignItems: "flex-start", justifyContent: "space-between", gap: 1 }}>
