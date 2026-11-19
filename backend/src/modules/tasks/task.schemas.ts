@@ -1,6 +1,17 @@
 import { z } from "zod";
 import { taskPriorities, taskStatuses } from "./task.model.js";
 
+const isValidTimeZone = (timeZone: string) => {
+	try {
+		new Intl.DateTimeFormat("en-US", { timeZone });
+		return true;
+	} catch {
+		return false;
+	}
+};
+
+const taskTimeZone = z.string().trim().min(1).max(80).refine(isValidTimeZone, "Invalid time zone.");
+
 const taskFields = {
 	title: z.string().trim().min(1, "Task title is required.").max(140),
 	description: z.string().trim().max(4000).default(""),
@@ -10,7 +21,7 @@ const taskFields = {
 	dueAt: z.union([z.iso.datetime(), z.null()]).default(null),
 };
 
-export const createTaskSchema = z.object(taskFields).strict().refine(
+export const createTaskSchema = z.object({ ...taskFields, timeZone: taskTimeZone }).strict().refine(
 	(value) => value.dueAt === null || value.dueDate !== null,
 	{ message: "A due time requires a due date.", path: ["dueAt"] },
 );
@@ -22,27 +33,22 @@ export const updateTaskSchema = z.object({
 	priority: z.enum(taskPriorities).optional(),
 	dueDate: z.union([z.iso.date(), z.null()]).optional(),
 	dueAt: z.union([z.iso.datetime(), z.null()]).optional(),
+	timeZone: taskTimeZone.optional(),
 }).strict()
-	.refine((value) => Object.keys(value).length > 0, "Provide at least one field to update.")
+	.refine((value) => Object.keys(value).some((key) => key !== "timeZone"), "Provide at least one field to update.")
 	.superRefine((value, context) => {
 		const hasDueDate = Object.hasOwn(value, "dueDate");
 		const hasDueAt = Object.hasOwn(value, "dueAt");
 		if (hasDueDate !== hasDueAt) {
 			context.addIssue({ code: "custom", path: ["dueAt"], message: "Update the due date and time together." });
 		}
+		if (hasDueDate && !value.timeZone) {
+			context.addIssue({ code: "custom", path: ["timeZone"], message: "A time zone is required when updating a deadline." });
+		}
 		if (value.dueAt && value.dueDate === null) {
 			context.addIssue({ code: "custom", path: ["dueAt"], message: "A due time requires a due date." });
 		}
 	});
-
-const isValidTimeZone = (timeZone: string) => {
-	try {
-		new Intl.DateTimeFormat("en-US", { timeZone });
-		return true;
-	} catch {
-		return false;
-	}
-};
 
 export const listTasksSchema = z.object({
 	view: z.enum(["all", "today", "upcoming", "overdue", "completed"]).default("all"),

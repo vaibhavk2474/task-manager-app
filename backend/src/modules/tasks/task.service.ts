@@ -165,11 +165,36 @@ export const taskService = {
 			...(previews ? { previews } : {}),
 		};
 	},
-	create(ownerId: string, data: { title: string; description: string; status: TaskStatus; priority: TaskPriority; dueDate: string | null; dueAt: string | null }) {
-		return taskRepository.createForOwner(ownerId, { ...data, dueDate: dateFromInput(data.dueDate), dueAt: dueAtFromInput(data.dueAt) });
+	create(ownerId: string, data: { title: string; description: string; status: TaskStatus; priority: TaskPriority; dueDate: string | null; dueAt: string | null; timeZone: string }) {
+		const validationError = deadlineValidationError(data.dueDate, data.dueAt, data.timeZone, new Date());
+		if (validationError) throw new TaskServiceError(validationError, 400);
+		return taskRepository.createForOwner(ownerId, {
+			title: data.title,
+			description: data.description,
+			status: data.status,
+			priority: data.priority,
+			dueDate: dateFromInput(data.dueDate),
+			dueAt: dueAtFromInput(data.dueAt),
+		});
 	},
 	async update(ownerId: string, id: string, data: Record<string, unknown>) {
 		const changes = { ...data };
+		const timeZone = changes.timeZone as string | undefined;
+		delete changes.timeZone;
+		if ("dueDate" in changes) {
+			const existing = await taskRepository.findOwned(ownerId, id);
+			if (!existing) throw new TaskServiceError("Task not found.", 404);
+			const nextDueDate = changes.dueDate as string | null;
+			const nextDueAt = changes.dueAt as string | null;
+			const existingDueDate = existing.dueDate?.toISOString().slice(0, 10) ?? null;
+			const existingDueAt = existing.dueAt?.getTime() ?? null;
+			const nextDueAtInstant = nextDueAt ? new Date(nextDueAt).getTime() : null;
+			const deadlineUnchanged = nextDueDate === existingDueDate && nextDueAtInstant === existingDueAt;
+			if (!deadlineUnchanged) {
+				const validationError = deadlineValidationError(nextDueDate, nextDueAt, timeZone ?? "UTC", new Date());
+				if (validationError) throw new TaskServiceError(validationError, 400);
+			}
+		}
 		if ("dueDate" in changes) changes.dueDate = dateFromInput(changes.dueDate as string | null);
 		if ("dueAt" in changes) changes.dueAt = dueAtFromInput(changes.dueAt as string | null);
 		const task = await taskRepository.updateOwned(ownerId, id, changes);
@@ -188,3 +213,10 @@ export class TaskServiceError extends Error {
 		this.name = "TaskServiceError";
 	}
 }
+
+const deadlineValidationError = (dueDate: string | null, dueAt: string | null, timeZone: string, now: Date) => {
+	const today = dateKeyFromParts(datePartsInTimeZone(now, timeZone));
+	if (dueDate && dueDate < today) return "Due date must be today or later.";
+	if (dueAt && new Date(dueAt).getTime() <= now.getTime()) return "Due time must be later than the current time.";
+	return null;
+};

@@ -16,7 +16,7 @@ Password recovery, email delivery, local MongoDB, and browser task storage are n
 
 ## Deadlines and overdue tasks
 
-Due dates and times are optional. A due date without a time is an all-day deadline: it remains due through that calendar day in the user's time zone and becomes overdue the following day. A due date with a time becomes overdue once that exact time passes. Tasks without deadlines and completed tasks are never counted as overdue. The frontend sends its IANA time zone with list requests so Today, Upcoming, and Overdue use the user's local calendar day.
+Due dates and times are optional. A due date without a time is an all-day deadline: it remains due through that calendar day in the user's time zone and becomes overdue the following day. A due date with a time becomes overdue once that exact time passes. New deadlines must be today or later, and timed deadlines must be in the future. An existing past deadline can remain unchanged while editing a task. Tasks without deadlines and completed tasks are never counted as overdue. The frontend sends its IANA time zone with task requests so deadline validation and Today, Upcoming, and Overdue use the user's local calendar day.
 
 ## Requirements
 

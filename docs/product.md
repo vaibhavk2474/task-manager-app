@@ -19,6 +19,7 @@ Task Manager is a personal workspace for turning work into clear, trackable task
 - MongoDB Atlas stores accounts, sessions, and tasks. There is no local MongoDB requirement.
 - The API always scopes task operations to the authenticated account.
 - An all-day due date remains due through the selected calendar day in the user's time zone; it becomes overdue the next day. A timed deadline becomes overdue when its exact instant passes. Tasks without a deadline and completed tasks are never overdue.
+- New deadlines must be today or later; timed deadlines must be strictly later than the current instant. Editing another field on an already overdue task is allowed when its past deadline is left unchanged. The date and time controls explain these rules and identify invalid values inline.
 - Overdue counts and filters include open tasks only and use the time zone supplied by the signed-in user's browser.
 - The browser does not persist task records or authentication tokens in local storage.
 - Password recovery, email, collaboration, attachments, recurring tasks, and notifications are outside the first release.

@@ -37,7 +37,7 @@ export const listTasks: RequestHandler = async (request, response, next) => {
 
 export const createTask: RequestHandler = async (request, response, next) => {
 	try {
-		const task = await taskService.create(request.session.userId!, request.body as { title: string; description: string; status: TaskStatus; priority: TaskPriority; dueDate: string | null; dueAt: string | null });
+		const task = await taskService.create(request.session.userId!, request.body as { title: string; description: string; status: TaskStatus; priority: TaskPriority; dueDate: string | null; dueAt: string | null; timeZone: string });
 		response.status(201).json({ task: serializeTask(task) });
 	} catch (error) { respondWithError(error, response, next); }
 };
