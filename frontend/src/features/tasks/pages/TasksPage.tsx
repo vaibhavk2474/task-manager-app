@@ -1,7 +1,8 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Alert, Box, Card, CardContent, Dialog, DialogActions, DialogContent, DialogTitle, Snackbar, Stack, Typography, Button } from "@mui/material";
 import AssignmentTurnedInOutlinedIcon from "@mui/icons-material/AssignmentTurnedInOutlined";
 import EventAvailableOutlinedIcon from "@mui/icons-material/EventAvailableOutlined";
+import EventBusyOutlinedIcon from "@mui/icons-material/EventBusyOutlined";
 import InsightsRoundedIcon from "@mui/icons-material/InsightsRounded";
 import { TaskShell } from "../../../shared/layouts/TaskShell";
 import { TaskList } from "../components/TaskList";
@@ -13,6 +14,7 @@ const viewCopy: Record<TaskView, { title: string; description: string }> = {
 	all: { title: "Your work, in focus.", description: "Make progress one thoughtful step at a time." },
 	today: { title: "Make today count.", description: "A clear view of what is due today." },
 	upcoming: { title: "Look ahead.", description: "See what is coming up and prepare at your pace." },
+	overdue: { title: "Bring these back into focus.", description: "Open tasks past their deadline. Update or complete them when you are ready." },
 	completed: { title: "Look what you have done.", description: "Small wins add up. Here is your completed work." },
 };
 
@@ -26,6 +28,11 @@ export const TasksPage = () => {
 	const [deleteTarget, setDeleteTarget] = useState<Task | null>(null);
 	const [deleting, setDeleting] = useState(false);
 	const [toast, setToast] = useState<{ message: string; severity: "success" | "error" } | null>(null);
+	const [now, setNow] = useState(() => new Date());
+	useEffect(() => {
+		const timer = window.setInterval(() => setNow(new Date()), 60_000);
+		return () => window.clearInterval(timer);
+	}, []);
 	const copy = viewCopy[view];
 	const completionRate = useMemo(() => counts.all ? Math.round((counts.completed / counts.all) * 100) : 0, [counts.all, counts.completed]);
 
@@ -68,9 +75,10 @@ export const TasksPage = () => {
 					</Typography>
 				</Stack>
 
-				<Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(3, 1fr)" }, gap: 1.5, mb: 4 }}>
+				<Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", xl: "repeat(4, 1fr)" }, gap: 1.5, mb: 4 }}>
 					<SummaryCard label="Open tasks" value={String(counts.all - counts.completed)} note="Ready for your next step" icon={<AssignmentTurnedInOutlinedIcon />} />
 					<SummaryCard label="Due today" value={String(counts.today)} note="Keep today in view" icon={<EventAvailableOutlinedIcon />} />
+					<SummaryCard label="Overdue" value={String(counts.overdue)} note={counts.overdue ? "Needs a fresh look" : "You are all caught up"} icon={<EventBusyOutlinedIcon />} alert={counts.overdue > 0} />
 					<SummaryCard label="Completion" value={`${completionRate}%`} note={counts.completed ? `${counts.completed} completed so far` : "Your progress starts here"} icon={<InsightsRoundedIcon />} />
 				</Box>
 
@@ -79,7 +87,7 @@ export const TasksPage = () => {
 					<Typography variant="caption" color="text.secondary">{tasks.length} {tasks.length === 1 ? "task" : "tasks"}</Typography>
 				</Stack>
 				{error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-				<TaskList tasks={tasks} view={view} isLoading={isLoading} search={search} onCreate={openCreate} onEdit={openEdit} onDelete={setDeleteTarget} onUpdate={updateTask} />
+				<TaskList tasks={tasks} view={view} isLoading={isLoading} search={search} now={now} onCreate={openCreate} onEdit={openEdit} onDelete={setDeleteTarget} onUpdate={updateTask} />
 			</Box>
 
 			{dialogOpen && <TaskFormDialog key={editingTask?.id ?? "new-task"} open task={editingTask} isSaving={saving} onClose={closeForm} onSubmit={saveTask} />}
@@ -95,11 +103,11 @@ export const TasksPage = () => {
 	);
 };
 
-const SummaryCard = ({ label, value, note, icon }: { label: string; value: string; note: string; icon: ReactNode }) => (
+const SummaryCard = ({ label, value, note, icon, alert = false }: { label: string; value: string; note: string; icon: ReactNode; alert?: boolean }) => (
 	<Card variant="outlined" sx={{ borderColor: "divider", height: "100%" }}><CardContent sx={{ p: "18px 20px !important" }}>
 		<Stack direction="row" sx={{ alignItems: "flex-start", justifyContent: "space-between" }}>
-			<Box><Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }}>{label}</Typography><Typography variant="h4" sx={{ mt: 0.8 }}>{value}</Typography><Typography variant="caption" color="text.secondary">{note}</Typography></Box>
-			<Box sx={{ width: 40, height: 40, borderRadius: 2.5, display: "grid", placeItems: "center", bgcolor: "action.hover", color: "primary.main" }}>{icon}</Box>
+			<Box><Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }}>{label}</Typography><Typography variant="h4" sx={{ mt: 0.8, color: alert ? "error.main" : "text.primary" }}>{value}</Typography><Typography variant="caption" color="text.secondary">{note}</Typography></Box>
+			<Box sx={{ width: 40, height: 40, borderRadius: 2.5, display: "grid", placeItems: "center", bgcolor: alert ? "error.main" : "action.hover", color: alert ? "error.contrastText" : "primary.main" }}>{icon}</Box>
 		</Stack>
 	</CardContent></Card>
 );

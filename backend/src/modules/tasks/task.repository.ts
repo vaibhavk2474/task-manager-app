@@ -11,7 +11,7 @@ export const taskRepository = {
 	countForOwner(ownerId: string, filter: TaskFilter = {}) {
 		return TaskModel.countDocuments({ ownerId: new Types.ObjectId(ownerId), ...filter });
 	},
-	createForOwner(ownerId: string, data: { title: string; description: string; status: TaskStatus; priority: TaskPriority; dueDate: Date | null }) {
+	createForOwner(ownerId: string, data: { title: string; description: string; status: TaskStatus; priority: TaskPriority; dueDate: Date | null; dueAt: Date | null }) {
 		return TaskModel.create({ ...data, ownerId: new Types.ObjectId(ownerId) });
 	},
 	updateOwned(ownerId: string, id: string, data: Record<string, unknown>) {

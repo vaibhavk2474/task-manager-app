@@ -3,7 +3,8 @@ import type { Task, TaskInput, TaskListResponse, TaskView } from "../types/task"
 
 export const tasksApi = {
 	list: (view: TaskView, search: string) => {
-		const params = new URLSearchParams({ view, search });
+		const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+		const params = new URLSearchParams({ view, search, timeZone });
 		return apiRequest<TaskListResponse>(`/api/tasks?${params.toString()}`);
 	},
 	create: (data: TaskInput) => apiRequest<{ task: Task }>("/api/tasks", { method: "POST", body: JSON.stringify(data) }),

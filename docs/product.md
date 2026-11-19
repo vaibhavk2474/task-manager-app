@@ -7,8 +7,8 @@ Task Manager is a personal workspace for turning work into clear, trackable task
 ## Current user journey
 
 1. Register an account or sign in.
-2. Review the task overview and filter by all, today, upcoming, or completed.
-3. Create or edit a task with a title, description, status, priority, and optional due date.
+2. Review the task overview and filter by all, today, upcoming, overdue, or completed.
+3. Create or edit a task with a title, description, status, priority, and optional due date and time.
 4. Mark a task complete, search the list, or delete a task.
 5. Sign out when finished.
 
@@ -16,6 +16,8 @@ Task Manager is a personal workspace for turning work into clear, trackable task
 
 - MongoDB Atlas stores accounts, sessions, and tasks. There is no local MongoDB requirement.
 - The API always scopes task operations to the authenticated account.
+- An all-day due date remains due through the selected calendar day in the user's time zone; it becomes overdue the next day. A timed deadline becomes overdue when its exact instant passes. Tasks without a deadline and completed tasks are never overdue.
+- Overdue counts and filters include open tasks only and use the time zone supplied by the signed-in user's browser.
 - The browser does not persist task records or authentication tokens in local storage.
 - Password recovery, email, collaboration, attachments, recurring tasks, and notifications are outside the first release.
 - If Atlas is not configured or reachable, the API reports a clear startup error rather than silently falling back to browser storage.

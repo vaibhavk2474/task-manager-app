@@ -1,9 +1,11 @@
 import { Box, Button, Card, CardContent, Checkbox, Chip, CircularProgress, IconButton, Stack, Typography } from "@mui/material";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import CalendarTodayRoundedIcon from "@mui/icons-material/CalendarTodayRounded";
+import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import type { Task, TaskInput, TaskView } from "../types/task";
+import { isTaskOverdue, taskDueLabel } from "../utils/deadline";
 
 interface TaskListProps {
 	tasks: Task[];
@@ -14,31 +16,22 @@ interface TaskListProps {
 	onEdit: (task: Task) => void;
 	onDelete: (task: Task) => void;
 	onUpdate: (taskId: string, data: Partial<TaskInput>) => Promise<unknown>;
+	now: Date;
 }
 
 const priorityColor = (priority: Task["priority"]): "default" | "warning" | "error" => priority === "high" ? "error" : priority === "medium" ? "warning" : "default";
 const statusLabel = (status: Task["status"]) => status === "in_progress" ? "In progress" : status === "done" ? "Completed" : "To do";
 
-const dateKey = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-const dueLabel = (dueDate: string | null) => {
-	if (!dueDate) return "No due date";
-	const today = dateKey(new Date());
-	const due = new Date(`${dueDate}T12:00:00`);
-	if (dueDate === today) return "Due today";
-	if (dueDate < today) return `Overdue · ${due.toLocaleDateString(undefined, { month: "short", day: "numeric" })}`;
-	return `Due ${due.toLocaleDateString(undefined, { month: "short", day: "numeric" })}`;
-};
-
-export const TaskList = ({ tasks, view, isLoading, search, onCreate, onEdit, onDelete, onUpdate }: TaskListProps) => {
+export const TaskList = ({ tasks, view, isLoading, search, onCreate, onEdit, onDelete, onUpdate, now }: TaskListProps) => {
 	if (isLoading && tasks.length === 0) return <Box sx={{ py: 10, display: "grid", placeItems: "center" }}><CircularProgress /></Box>;
 	if (!tasks.length) {
 		return (
 			<Card variant="outlined" sx={{ borderStyle: "dashed", bgcolor: "transparent", textAlign: "center", py: 7, px: 2 }}>
 				<CardContent>
-					<Box sx={{ width: 58, height: 58, mx: "auto", mb: 2, display: "grid", placeItems: "center", borderRadius: "50%", bgcolor: "action.hover", color: "primary.main" }}><AddRoundedIcon fontSize="large" /></Box>
-					<Typography variant="h6" gutterBottom sx={{ fontWeight: 800 }}>{search ? "No matching tasks" : view === "completed" ? "Nothing completed yet" : "A clear space to begin"}</Typography>
-					<Typography color="text.secondary" sx={{ mb: 2.5 }}>{search ? "Try another search or clear the search field." : "Add a task and give your day a little direction."}</Typography>
-					{view !== "completed" && !search && <Button variant="contained" startIcon={<AddRoundedIcon />} onClick={onCreate}>Create your first task</Button>}
+					<Box sx={{ width: 58, height: 58, mx: "auto", mb: 2, display: "grid", placeItems: "center", borderRadius: "50%", bgcolor: "action.hover", color: view === "overdue" ? "success.main" : "primary.main" }}>{view === "overdue" ? <CheckCircleOutlineRoundedIcon fontSize="large" /> : <AddRoundedIcon fontSize="large" />}</Box>
+					<Typography variant="h6" gutterBottom sx={{ fontWeight: 800 }}>{search ? "No matching tasks" : view === "completed" ? "Nothing completed yet" : view === "overdue" ? "You are all caught up" : "A clear space to begin"}</Typography>
+					<Typography color="text.secondary" sx={{ mb: 2.5 }}>{search ? "Try another search or clear the search field." : view === "overdue" ? "There are no overdue tasks right now." : "Add a task and give your day a little direction."}</Typography>
+					{view !== "completed" && view !== "overdue" && !search && <Button variant="contained" startIcon={<AddRoundedIcon />} onClick={onCreate}>Create your first task</Button>}
 				</CardContent>
 			</Card>
 		);
@@ -57,7 +50,7 @@ export const TaskList = ({ tasks, view, isLoading, search, onCreate, onEdit, onD
 								<Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", gap: 0.8, mt: task.description ? 0 : 1 }}>
 									<Chip size="small" label={task.priority} color={priorityColor(task.priority)} variant={task.priority === "low" ? "outlined" : "filled"} sx={{ textTransform: "capitalize", height: 24, fontWeight: 700 }} />
 									<Chip size="small" label={statusLabel(task.status)} variant="outlined" sx={{ height: 24, borderColor: "divider" }} />
-									<Typography variant="caption" color={task.dueDate && task.dueDate < dateKey(new Date()) && task.status !== "done" ? "error.main" : "text.secondary"} sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}><CalendarTodayRoundedIcon sx={{ fontSize: 14 }} />{dueLabel(task.dueDate)}</Typography>
+									<Typography variant="caption" color={isTaskOverdue(task, now) ? "error.main" : "text.secondary"} sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}><CalendarTodayRoundedIcon sx={{ fontSize: 14 }} />{taskDueLabel(task, now)}</Typography>
 								</Stack>
 							</Box>
 							<Stack direction="row" spacing={0.25}>

@@ -3,53 +3,158 @@ import { taskRepository } from "./task.repository.js";
 import type { TaskAttributes, TaskPriority, TaskStatus } from "./task.model.js";
 
 type TaskFilter = QueryFilter<TaskAttributes>;
-type TaskView = "all" | "today" | "upcoming" | "completed";
+type TaskView = "all" | "today" | "upcoming" | "overdue" | "completed";
 
-const dayRange = (date: Date) => {
-	const start = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
-	return { start, end: new Date(start.getTime() + 24 * 60 * 60 * 1000) };
+interface ZonedDayWindow {
+	todayKey: string;
+	todayMarker: Date;
+	tomorrowMarker: Date;
+	start: Date;
+	end: Date;
+}
+
+const datePartsInTimeZone = (date: Date, timeZone: string) => {
+	const parts = new Intl.DateTimeFormat("en-US", {
+		timeZone,
+		year: "numeric",
+		month: "2-digit",
+		day: "2-digit",
+		hour: "2-digit",
+		minute: "2-digit",
+		second: "2-digit",
+		hourCycle: "h23",
+	}).formatToParts(date);
+	const value = (type: Intl.DateTimeFormatPartTypes) => Number(parts.find((part) => part.type === type)?.value);
+	return { year: value("year"), month: value("month"), day: value("day"), hour: value("hour"), minute: value("minute"), second: value("second") };
 };
 
-const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const dateKeyFromParts = ({ year, month, day }: Pick<ReturnType<typeof datePartsInTimeZone>, "year" | "month" | "day">) =>
+	`${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
-const filterForView = (view: TaskView, now: Date): TaskFilter => {
+const nextDateKey = (dateKey: string) => {
+	const next = new Date(`${dateKey}T12:00:00.000Z`);
+	next.setUTCDate(next.getUTCDate() + 1);
+	return next.toISOString().slice(0, 10);
+};
+
+const dateMarker = (dateKey: string) => new Date(`${dateKey}T12:00:00.000Z`);
+
+const timeZoneOffsetAt = (instant: Date, timeZone: string) => {
+	const parts = datePartsInTimeZone(instant, timeZone);
+	return Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute, parts.second) - instant.getTime();
+};
+
+const localMidnightAsUtc = (dateKey: string, timeZone: string) => {
+	const [year = 1970, month = 1, day = 1] = dateKey.split("-").map(Number);
+	const targetAsUtc = Date.UTC(year, month - 1, day);
+	let candidate = targetAsUtc;
+	for (let attempt = 0; attempt < 4; attempt += 1) {
+		const adjusted = targetAsUtc - timeZoneOffsetAt(new Date(candidate), timeZone);
+		if (adjusted === candidate) break;
+		candidate = adjusted;
+	}
+	return new Date(candidate);
+};
+
+const getZonedDayWindow = (now: Date, timeZone: string): ZonedDayWindow => {
+	const todayKey = dateKeyFromParts(datePartsInTimeZone(now, timeZone));
+	const tomorrowKey = nextDateKey(todayKey);
+	return {
+		todayKey,
+		todayMarker: dateMarker(todayKey),
+		tomorrowMarker: dateMarker(tomorrowKey),
+		start: localMidnightAsUtc(todayKey, timeZone),
+		end: localMidnightAsUtc(tomorrowKey, timeZone),
+	};
+};
+
+const filtersForView = (view: TaskView, now: Date, window: ZonedDayWindow): TaskFilter => {
+	const timedDeadlineStart = now.getTime() > window.start.getTime() ? now : window.start;
 	if (view === "completed") return { status: "done" };
 	if (view === "today") {
-		const { start, end } = dayRange(now);
-		return { status: { $ne: "done" }, dueDate: { $gte: start, $lt: end } };
+		return {
+			status: { $ne: "done" },
+			$or: [
+				{ dueAt: { $gte: timedDeadlineStart, $lt: window.end } },
+				{ dueAt: null, dueDate: { $gte: window.todayMarker, $lt: window.tomorrowMarker } },
+			],
+		};
 	}
 	if (view === "upcoming") {
-		const { end } = dayRange(now);
-		return { status: { $ne: "done" }, dueDate: { $gte: end } };
+		return {
+			status: { $ne: "done" },
+			$or: [
+				{ dueAt: { $gte: window.end } },
+				{ dueAt: null, dueDate: { $gte: window.tomorrowMarker } },
+			],
+		};
+	}
+	if (view === "overdue") {
+		return {
+			status: { $ne: "done" },
+			$or: [
+				{ dueAt: { $lt: now } },
+				{ dueAt: null, dueDate: { $ne: null, $lt: window.todayMarker } },
+			],
+		};
 	}
 	return {};
 };
 
-const dueDateFromInput = (date: string | null | undefined) => date ? new Date(`${date}T12:00:00.000Z`) : null;
+const dateFromInput = (date: string | null | undefined) => date ? new Date(`${date}T12:00:00.000Z`) : null;
+const dueAtFromInput = (dateTime: string | null | undefined) => dateTime ? new Date(dateTime) : null;
+const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 export const taskService = {
-	async list(ownerId: string, view: TaskView, search: string) {
+	async list(ownerId: string, view: TaskView, search: string, timeZone: string) {
+		const now = new Date();
+		const window = getZonedDayWindow(now, timeZone);
 		const searchFilter: TaskFilter = search
 			? { $or: [{ title: { $regex: escapeRegExp(search), $options: "i" } }, { description: { $regex: escapeRegExp(search), $options: "i" } }] }
 			: {};
-		const viewFilter = filterForView(view, new Date());
-		const filter = { ...viewFilter, ...searchFilter };
-		const { start, end } = dayRange(new Date());
-		const [tasks, all, today, upcoming, completed] = await Promise.all([
+		const viewFilter = filtersForView(view, now, window);
+		const conditions = [viewFilter, searchFilter].filter((filter) => Object.keys(filter).length > 0);
+		const filter: TaskFilter = conditions.length > 1 ? { $and: conditions } : conditions[0] ?? {};
+		const openTasks: TaskFilter = { status: { $ne: "done" } };
+		const timedDeadlineStart = now.getTime() > window.start.getTime() ? now : window.start;
+		const todayFilter: TaskFilter = {
+			...openTasks,
+			$or: [
+				{ dueAt: { $gte: timedDeadlineStart, $lt: window.end } },
+				{ dueAt: null, dueDate: { $gte: window.todayMarker, $lt: window.tomorrowMarker } },
+			],
+		};
+		const upcomingFilter: TaskFilter = {
+			...openTasks,
+			$or: [
+				{ dueAt: { $gte: window.end } },
+				{ dueAt: null, dueDate: { $gte: window.tomorrowMarker } },
+			],
+		};
+		const overdueFilter: TaskFilter = {
+			...openTasks,
+			$or: [
+				{ dueAt: { $lt: now } },
+				{ dueAt: null, dueDate: { $ne: null, $lt: window.todayMarker } },
+			],
+		};
+		const [tasks, all, today, upcoming, overdue, completed] = await Promise.all([
 			taskRepository.listForOwner(ownerId, filter),
 			taskRepository.countForOwner(ownerId),
-			taskRepository.countForOwner(ownerId, { status: { $ne: "done" }, dueDate: { $gte: start, $lt: end } }),
-			taskRepository.countForOwner(ownerId, { status: { $ne: "done" }, dueDate: { $gte: end } }),
+			taskRepository.countForOwner(ownerId, todayFilter),
+			taskRepository.countForOwner(ownerId, upcomingFilter),
+			taskRepository.countForOwner(ownerId, overdueFilter),
 			taskRepository.countForOwner(ownerId, { status: "done" }),
 		]);
-		return { tasks, counts: { all, today, upcoming, completed } };
+		return { tasks, counts: { all, today, upcoming, overdue, completed } };
 	},
-	create(ownerId: string, data: { title: string; description: string; status: TaskStatus; priority: TaskPriority; dueDate: string | null }) {
-		return taskRepository.createForOwner(ownerId, { ...data, dueDate: dueDateFromInput(data.dueDate) });
+	create(ownerId: string, data: { title: string; description: string; status: TaskStatus; priority: TaskPriority; dueDate: string | null; dueAt: string | null }) {
+		return taskRepository.createForOwner(ownerId, { ...data, dueDate: dateFromInput(data.dueDate), dueAt: dueAtFromInput(data.dueAt) });
 	},
-	async update(ownerId: string, id: string, data: Record<string, string | null>) {
-		const changes = { ...data } as Record<string, unknown>;
-		if ("dueDate" in changes) changes.dueDate = dueDateFromInput(changes.dueDate as string | null);
+	async update(ownerId: string, id: string, data: Record<string, unknown>) {
+		const changes = { ...data };
+		if ("dueDate" in changes) changes.dueDate = dateFromInput(changes.dueDate as string | null);
+		if ("dueAt" in changes) changes.dueAt = dueAtFromInput(changes.dueAt as string | null);
 		const task = await taskRepository.updateOwned(ownerId, id, changes);
 		if (!task) throw new TaskServiceError("Task not found.", 404);
 		return task;

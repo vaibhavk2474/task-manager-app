@@ -5,12 +5,17 @@ A focused, full-stack task manager built with React, TypeScript, Vite, Material 
 ## Product capabilities
 
 - Create, view, update, complete, search, filter, and delete tasks.
-- Set a task title, description, status, priority, and optional due date.
+- Set a task title, description, status, priority, and optional due date and time.
+- Review overdue open tasks in a dedicated filter and overview count.
 - Sign up, sign in, restore a session, and sign out.
 - Store accounts, sessions, and tasks in MongoDB Atlas. Tasks are scoped to their owner on every API operation.
 - Change light/dark appearance. Shared colors, typography, spacing, and component defaults live in the central MUI theme.
 
 Password recovery, email delivery, local MongoDB, and browser task storage are not part of this application.
+
+## Deadlines and overdue tasks
+
+Due dates and times are optional. A due date without a time is an all-day deadline: it remains due through that calendar day in the user's time zone and becomes overdue the following day. A due date with a time becomes overdue once that exact time passes. Tasks without deadlines and completed tasks are never counted as overdue. The frontend sends its IANA time zone with list requests so Today, Upcoming, and Overdue use the user's local calendar day.
 
 ## Requirements
 

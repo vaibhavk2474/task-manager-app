@@ -7,18 +7,46 @@ const taskFields = {
 	status: z.enum(taskStatuses).default("todo"),
 	priority: z.enum(taskPriorities).default("medium"),
 	dueDate: z.union([z.iso.date(), z.null()]).default(null),
+	dueAt: z.union([z.iso.datetime(), z.null()]).default(null),
 };
 
-export const createTaskSchema = z.object(taskFields).strict();
+export const createTaskSchema = z.object(taskFields).strict().refine(
+	(value) => value.dueAt === null || value.dueDate !== null,
+	{ message: "A due time requires a due date.", path: ["dueAt"] },
+);
+
 export const updateTaskSchema = z.object({
 	title: taskFields.title.optional(),
 	description: taskFields.description.optional(),
 	status: z.enum(taskStatuses).optional(),
 	priority: z.enum(taskPriorities).optional(),
 	dueDate: z.union([z.iso.date(), z.null()]).optional(),
-}).strict().refine((value) => Object.keys(value).length > 0, "Provide at least one field to update.");
+	dueAt: z.union([z.iso.datetime(), z.null()]).optional(),
+}).strict()
+	.refine((value) => Object.keys(value).length > 0, "Provide at least one field to update.")
+	.superRefine((value, context) => {
+		const hasDueDate = Object.hasOwn(value, "dueDate");
+		const hasDueAt = Object.hasOwn(value, "dueAt");
+		if (hasDueDate !== hasDueAt) {
+			context.addIssue({ code: "custom", path: ["dueAt"], message: "Update the due date and time together." });
+		}
+		if (value.dueAt && value.dueDate === null) {
+			context.addIssue({ code: "custom", path: ["dueAt"], message: "A due time requires a due date." });
+		}
+	});
+
+const isValidTimeZone = (timeZone: string) => {
+	try {
+		new Intl.DateTimeFormat("en-US", { timeZone });
+		return true;
+	} catch {
+		return false;
+	}
+};
+
 export const listTasksSchema = z.object({
-	view: z.enum(["all", "today", "upcoming", "completed"]).default("all"),
+	view: z.enum(["all", "today", "upcoming", "overdue", "completed"]).default("all"),
 	search: z.string().trim().max(120).default(""),
+	timeZone: z.string().trim().min(1).max(80).default("UTC").refine(isValidTimeZone, "Invalid time zone."),
 });
 export const taskIdSchema = z.string().regex(/^[a-f\d]{24}$/i, "Task was not found.");

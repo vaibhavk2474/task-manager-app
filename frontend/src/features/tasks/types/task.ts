@@ -1,6 +1,6 @@
 export type TaskStatus = "todo" | "in_progress" | "done";
 export type TaskPriority = "low" | "medium" | "high";
-export type TaskView = "all" | "today" | "upcoming" | "completed";
+export type TaskView = "all" | "today" | "upcoming" | "overdue" | "completed";
 
 export interface Task {
 	id: string;
@@ -9,6 +9,7 @@ export interface Task {
 	status: TaskStatus;
 	priority: TaskPriority;
 	dueDate: string | null;
+	dueAt: string | null;
 	createdAt: string;
 	updatedAt: string;
 }
@@ -19,9 +20,10 @@ export interface TaskInput {
 	status: TaskStatus;
 	priority: TaskPriority;
 	dueDate: string | null;
+	dueAt: string | null;
 }
 
 export interface TaskListResponse {
 	tasks: Task[];
-	counts: { all: number; today: number; upcoming: number; completed: number };
+	counts: { all: number; today: number; upcoming: number; overdue: number; completed: number };
 }

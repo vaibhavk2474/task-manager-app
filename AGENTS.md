@@ -27,4 +27,5 @@ Read this file and `docs/architecture.md` first. Read `docs/product.md` for user
 - MongoDB Atlas is the only data store. The backend connects through `backend/.env`; Compose does not run MongoDB.
 - Authentication supports registration, sign-in, session restore, and sign-out. Password recovery and email are intentionally absent.
 - Tasks are account-owned MongoDB records. The browser does not cache task data in `localStorage`.
+- Tasks may have an optional all-day or timed deadline. `dueDate` stores the calendar day as a UTC-noon marker; `dueAt` stores the exact UTC instant for a timed deadline and stays null for all-day deadlines. Keep both fields paired on updates. Overdue applies only to open tasks: all-day tasks become overdue the day after the selected date in the user's time zone; timed tasks become overdue when their instant passes. No deadline means never overdue.
 - See `docs/product.md`, `docs/architecture.md`, and `docs/roadmap.md` for the current scope and next steps.

@@ -3,6 +3,7 @@ import { Avatar, Box, Button, Divider, Drawer, IconButton, InputAdornment, List,
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import CalendarTodayRoundedIcon from "@mui/icons-material/CalendarTodayRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
+import EventBusyRoundedIcon from "@mui/icons-material/EventBusyRounded";
 import FormatListBulletedRoundedIcon from "@mui/icons-material/FormatListBulletedRounded";
 import LightModeRoundedIcon from "@mui/icons-material/LightModeRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
@@ -19,7 +20,7 @@ interface TaskShellProps {
 	children: ReactNode;
 	view: TaskView;
 	onViewChange: (view: TaskView) => void;
-	counts: { all: number; today: number; upcoming: number; completed: number };
+	counts: { all: number; today: number; upcoming: number; overdue: number; completed: number };
 	search: string;
 	onSearchChange: (value: string) => void;
 	onCreateTask: () => void;
@@ -29,6 +30,7 @@ const navItems = [
 	{ key: "all", label: "All tasks", Icon: FormatListBulletedRoundedIcon },
 	{ key: "today", label: "Today", Icon: CalendarTodayRoundedIcon },
 	{ key: "upcoming", label: "Upcoming", Icon: TaskAltRoundedIcon },
+	{ key: "overdue", label: "Overdue", Icon: EventBusyRoundedIcon },
 	{ key: "completed", label: "Completed", Icon: CheckCircleRoundedIcon },
 ] as const;
 

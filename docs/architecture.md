@@ -31,7 +31,9 @@
 
 ## Data model
 
-`User` stores normalized email, display name, password hash, and timestamps. `Task` stores `ownerId`, title, description, status (`todo`, `in_progress`, `done`), priority (`low`, `medium`, `high`), optional `dueDate`, and timestamps. Index tasks by owner and due date/updated date for scoped lists.
+`User` stores normalized email, display name, password hash, and timestamps. `Task` stores `ownerId`, title, description, status (`todo`, `in_progress`, `done`), priority (`low`, `medium`, `high`), optional `dueDate`, optional `dueAt`, and timestamps. `dueDate` is the selected calendar day stored as a UTC-noon marker so it remains date-only; `dueAt` is either null (all-day deadline) or the exact UTC instant for the selected local date and time. Existing records with `dueDate` and no `dueAt` remain valid all-day tasks. API updates must submit both deadline fields together. Index tasks by owner and due date/dueAt/updated date for scoped lists.
+
+The frontend sends its IANA time zone on task-list requests. The task service uses it for local day boundaries: date-only tasks become overdue after their selected day ends, while timed tasks become overdue immediately after their stored instant. Completed tasks are excluded from open, today, upcoming, and overdue counts.
 
 ## Docker and environment
 
@@ -42,5 +44,6 @@ For Compose, mount source/config files individually instead of mounting the enti
 ## Change guidance
 
 - Add task behavior in the task feature/backend module rather than in the shell.
+- Keep deadline semantics consistent across `task.schemas.ts`, `task.service.ts`, the task form, and `features/tasks/utils/deadline.ts`. Never infer an all-day deadline's due time from a UTC offset.
 - Update the product and architecture documents when user behavior or data flow changes.
 - Add a decision record only for choices that affect multiple modules or are costly to reverse.

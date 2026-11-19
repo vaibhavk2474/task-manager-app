@@ -12,6 +12,7 @@ export interface TaskAttributes {
 	status: TaskStatus;
 	priority: TaskPriority;
 	dueDate: Date | null;
+	dueAt: Date | null;
 	createdAt: Date;
 	updatedAt: Date;
 }
@@ -23,9 +24,11 @@ const taskSchema = new Schema({
 	status: { type: String, enum: taskStatuses, required: true, default: "todo" },
 	priority: { type: String, enum: taskPriorities, required: true, default: "medium" },
 	dueDate: { type: Date, default: null },
+	dueAt: { type: Date, default: null },
 }, { timestamps: true });
 
 taskSchema.index({ ownerId: 1, updatedAt: -1 });
 taskSchema.index({ ownerId: 1, dueDate: 1 });
+taskSchema.index({ ownerId: 1, dueAt: 1 });
 
 export const TaskModel = model("Task", taskSchema);

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { tasksApi } from "../api/tasksApi";
 import type { Task, TaskInput, TaskListResponse, TaskView } from "../types/task";
 
-const emptyCounts: TaskListResponse["counts"] = { all: 0, today: 0, upcoming: 0, completed: 0 };
+const emptyCounts: TaskListResponse["counts"] = { all: 0, today: 0, upcoming: 0, overdue: 0, completed: 0 };
 
 export const useTasks = (view: TaskView, search: string) => {
 	const [tasks, setTasks] = useState<Task[]>([]);
@@ -10,8 +10,8 @@ export const useTasks = (view: TaskView, search: string) => {
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState("");
 
-	const refresh = useCallback(async () => {
-		setIsLoading(true);
+	const refresh = useCallback(async (background = false) => {
+		if (!background) setIsLoading(true);
 		setError("");
 		try {
 			const result = await tasksApi.list(view, search);
@@ -19,12 +19,17 @@ export const useTasks = (view: TaskView, search: string) => {
 			setCounts(result.counts);
 		} catch (caught) {
 			setError(caught instanceof Error ? caught.message : "Could not load your tasks.");
-		} finally { setIsLoading(false); }
+		} finally { if (!background) setIsLoading(false); }
 	}, [view, search]);
 
 	useEffect(() => {
 		const timer = window.setTimeout(() => { void refresh(); }, 220);
 		return () => window.clearTimeout(timer);
+	}, [refresh]);
+
+	useEffect(() => {
+		const timer = window.setInterval(() => { void refresh(true); }, 60_000);
+		return () => window.clearInterval(timer);
 	}, [refresh]);
 
 	const create = async (data: TaskInput) => { const result = await tasksApi.create(data); await refresh(); return result.task; };
