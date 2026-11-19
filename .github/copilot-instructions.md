@@ -1,0 +1,1 @@
+Follow [`../AGENTS.md`](../AGENTS.md) and the current source map in [`../docs/architecture.md`](../docs/architecture.md). Work in the owning feature, keep task data on the authenticated API and MongoDB, use the shared MUI theme, and update durable product or architecture documentation when behavior changes.

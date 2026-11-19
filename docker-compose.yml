@@ -1,0 +1,48 @@
+name: task-manager-app
+
+services:
+  frontend:
+    container_name: task-manager-app-frontend
+    image: task-manager-app/frontend:dev
+    build:
+      context: ./frontend
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+      - ./frontend/index.html:/app/index.html
+      - ./frontend/vite.config.ts:/app/vite.config.ts
+      - ./frontend/tsconfig.json:/app/tsconfig.json
+      - ./frontend/tsconfig.app.json:/app/tsconfig.app.json
+    ports:
+      - "5175:5175"
+    environment:
+      VITE_API_PROXY_TARGET: http://api:3002
+    depends_on:
+      api:
+        condition: service_started
+    networks:
+      - task-manager-app-network
+
+  api:
+    container_name: task-manager-app-api
+    image: task-manager-app/api:dev
+    build:
+      context: ./backend
+    env_file:
+      - ./backend/.env
+    environment:
+      NODE_ENV: development
+      PORT: 3002
+      APP_ORIGIN: http://localhost:5175
+    volumes:
+      - ./backend/src:/app/src
+      - ./backend/tsconfig.json:/app/tsconfig.json
+    ports:
+      - "3002:3002"
+    networks:
+      - task-manager-app-network
+
+networks:
+  task-manager-app-network:
+    name: task-manager-app-network
+    driver: bridge
