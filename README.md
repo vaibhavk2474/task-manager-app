@@ -68,6 +68,14 @@ docker compose up --build
 
 Open [http://localhost:5175](http://localhost:5175). Compose runs only the frontend and API; the API connects to the same Atlas database. It does not create a MongoDB or email container. Source code is mounted for live development, while `node_modules` stays in the image so stale dependency volumes cannot hide newly installed packages. Run `docker compose down` to stop the containers.
 
+## Deploy frontend with Vercel
+
+Set the Vercel project root directory to `frontend`. The checked-in `frontend/vercel.json` forwards API requests to the Render backend while keeping the browser on the Vercel origin.
+
+Add `RENDER_API_URL` to the Vercel project's Environment Variables. Set its value to the Render service's public origin, such as `https://your-api.onrender.com`, with no trailing slash or `/api` suffix. Apply it to Production (and Preview if those deployments should use an API). Redeploy after changing the variable.
+
+On Render, set `APP_ORIGIN` to the exact production Vercel origin, such as `https://your-app.vercel.app`. Keep the backend's Atlas URI and session secret in Render's environment settings, not in the frontend or repository.
+
 ## Project structure
 
 ```text

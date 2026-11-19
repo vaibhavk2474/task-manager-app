@@ -4,7 +4,7 @@
 
 - `frontend/` is a React + TypeScript SPA built with Vite and Material UI.
 - `backend/` is an Express + TypeScript API. Mongoose connects to MongoDB Atlas.
-- Vite proxies `/api` to the backend during local development. Docker Compose uses the same origin proxy across its private app network.
+- Vite proxies `/api` to the backend during local development. Docker Compose uses the same origin proxy across its private app network. Production Vercel deployments use `frontend/vercel.json` to forward `/api/*` requests to Render; the destination host comes from the Vercel `RENDER_API_URL` environment variable.
 - Express sessions are stored in MongoDB through `connect-mongo`; the browser receives an HttpOnly cookie. Authentication tokens and task data are not stored in browser local storage.
 - Task requests require a valid session. Every repository read/update/delete filters by both task ID and owner ID.
 
