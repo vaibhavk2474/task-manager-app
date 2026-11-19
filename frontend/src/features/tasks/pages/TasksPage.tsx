@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
-import { Alert, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Snackbar, Stack, Typography } from "@mui/material";
+import { Alert, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Pagination, Snackbar, Stack, Typography } from "@mui/material";
 import { TaskShell } from "../../../shared/layouts/TaskShell";
 import { OverviewDashboard } from "../components/OverviewDashboard";
 import { TaskFilters } from "../components/TaskFilters";
 import { TaskList } from "../components/TaskList";
+import { TaskTable } from "../components/TaskTable";
+import { TaskViewToggle, type TaskDisplayMode } from "../components/TaskViewToggle";
 import { TaskFormDialog } from "../components/TaskFormDialog";
 import { useTasks } from "../hooks/useTasks";
 import type { Task, TaskInput, TaskPageView, TaskView } from "../types/task";
@@ -11,6 +13,8 @@ import type { Task, TaskInput, TaskPageView, TaskView } from "../types/task";
 export const TasksPage = () => {
 	const [view, setView] = useState<TaskPageView>("overview");
 	const [search, setSearch] = useState("");
+	const [displayMode, setDisplayMode] = useState<TaskDisplayMode>("cards");
+	const [page, setPage] = useState(1);
 	const listView: TaskView = view === "overview" ? "all" : view;
 	const { tasks, counts, isLoading, error, create, update, remove } = useTasks(listView, view === "overview" ? "" : search);
 	const [dialogOpen, setDialogOpen] = useState(false);
@@ -26,8 +30,12 @@ export const TasksPage = () => {
 	}, []);
 	const navigate = (nextView: TaskPageView) => {
 		if (view === "overview" && nextView !== "overview") setSearch("");
+		setPage(1);
 		setView(nextView);
 	};
+	const selectFilter = (nextView: TaskView) => { setPage(1); setView(nextView); };
+	const changeSearch = (nextSearch: string) => { setPage(1); setSearch(nextSearch); };
+	const changeDisplayMode = (nextMode: TaskDisplayMode) => { setPage(1); setDisplayMode(nextMode); };
 
 	const openCreate = () => { setEditingTask(null); setDialogOpen(true); };
 	const openEdit = (task: Task) => { setEditingTask(task); setDialogOpen(true); };
@@ -37,27 +45,34 @@ export const TasksPage = () => {
 		try {
 			if (editingTask) await update(editingTask.id, data);
 			else await create(data);
+			setPage(1);
 			setDialogOpen(false);
 			setToast({ message: editingTask ? "Task updated." : "Task created.", severity: "success" });
 		}
 		finally { setSaving(false); }
 	};
 	const updateTask = async (id: string, data: Partial<TaskInput>) => {
-		try { await update(id, data); setToast({ message: "Task updated.", severity: "success" }); }
+		try { await update(id, data); setPage(1); setToast({ message: "Task updated.", severity: "success" }); }
 		catch (caught) { setToast({ message: caught instanceof Error ? caught.message : "Could not update the task.", severity: "error" }); }
 	};
 	const confirmDelete = async () => {
 		if (!deleteTarget) return;
 		setDeleting(true);
-		try { await remove(deleteTarget.id); setToast({ message: "Task deleted.", severity: "success" }); setDeleteTarget(null); }
+		try { await remove(deleteTarget.id); setPage(1); setToast({ message: "Task deleted.", severity: "success" }); setDeleteTarget(null); }
 		catch (caught) { setToast({ message: caught instanceof Error ? caught.message : "Could not delete the task.", severity: "error" }); }
 		finally { setDeleting(false); }
 	};
 
 	const dashboard = view === "overview";
+	const pageSize = displayMode === "cards" ? 8 : 10;
+	const pageCount = Math.max(1, Math.ceil(tasks.length / pageSize));
+	const currentPage = Math.min(page, pageCount);
+	const visibleTasks = tasks.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+	const rangeStart = tasks.length ? (currentPage - 1) * pageSize + 1 : 0;
+	const rangeEnd = Math.min(currentPage * pageSize, tasks.length);
 
 	return (
-		<TaskShell view={view} onViewChange={navigate} search={search} onSearchChange={setSearch} onCreateTask={openCreate} showSearch={!dashboard}>
+		<TaskShell view={view} onViewChange={navigate} search={search} onSearchChange={changeSearch} onCreateTask={openCreate} showSearch={!dashboard}>
 			{dashboard ? (
 				<>
 					{error && <Alert severity="error" sx={{ maxWidth: 1120, mx: "auto", mb: 2 }}>{error}</Alert>}
@@ -71,15 +86,25 @@ export const TasksPage = () => {
 							<Typography variant="h3" component="h1" sx={{ mt: 0.4, fontSize: { xs: 32, sm: 40 } }}>All tasks</Typography>
 							<Typography color="text.secondary" sx={{ mt: 0.7 }}>Filter your work by deadline or completion status.</Typography>
 						</Box>
-						<Box sx={{ minWidth: 0, flex: "0 1 auto" }}><TaskFilters view={listView} counts={counts} onChange={setView} /></Box>
+						<Box sx={{ minWidth: 0, flex: "0 1 auto" }}><TaskFilters view={listView} counts={counts} onChange={selectFilter} /></Box>
 					</Stack>
 
-					<Stack direction="row" sx={{ alignItems: "center", justifyContent: "space-between", mb: 1.5, gap: 2 }}>
+					<Stack direction={{ xs: "column", sm: "row" }} sx={{ alignItems: { xs: "stretch", sm: "center" }, justifyContent: "space-between", mb: 1.5, gap: 1.5 }}>
 						<Box sx={{ minWidth: 0 }}><Typography variant="h6" sx={{ fontWeight: 800 }}>{search ? "Search results" : "Your task list"}</Typography><Typography variant="body2" color="text.secondary" sx={{ overflowWrap: "anywhere" }}>{search ? `Matching “${search}”` : "Keep the important things moving."}</Typography></Box>
-						<Typography variant="caption" color="text.secondary" sx={{ flexShrink: 0 }}>{tasks.length} {tasks.length === 1 ? "task" : "tasks"}</Typography>
+						<TaskViewToggle value={displayMode} onChange={changeDisplayMode} />
 					</Stack>
 					{error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-					<TaskList tasks={tasks} view={listView} isLoading={isLoading} search={search} now={now} onCreate={openCreate} onEdit={openEdit} onDelete={setDeleteTarget} onUpdate={updateTask} />
+					{tasks.length === 0 ? (
+						<TaskList tasks={[]} view={listView} isLoading={isLoading} search={search} now={now} onCreate={openCreate} onEdit={openEdit} onDelete={setDeleteTarget} onUpdate={updateTask} />
+					) : displayMode === "cards" ? (
+						<TaskList tasks={visibleTasks} view={listView} isLoading={isLoading} search={search} now={now} onCreate={openCreate} onEdit={openEdit} onDelete={setDeleteTarget} onUpdate={updateTask} />
+					) : (
+						<TaskTable tasks={visibleTasks} isLoading={isLoading} now={now} onEdit={openEdit} onDelete={setDeleteTarget} onUpdate={updateTask} />
+					)}
+					{tasks.length > 0 && <Stack direction={{ xs: "column", sm: "row" }} sx={{ alignItems: { xs: "flex-start", sm: "center" }, justifyContent: "space-between", gap: 1.5, mt: 2.5 }}>
+						<Typography variant="body2" color="text.secondary">Showing {rangeStart}–{rangeEnd} of {tasks.length} tasks</Typography>
+						{pageCount > 1 && <Pagination count={pageCount} page={currentPage} onChange={(_event, nextPage) => setPage(nextPage)} color="primary" size="small" shape="rounded" aria-label="Task pages" />}
+					</Stack>}
 				</Box>
 			)}
 
