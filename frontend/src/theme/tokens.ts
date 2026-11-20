@@ -4,6 +4,8 @@ export const designTokens = {
 		brandDeep: "#194b43",
 		accent: "#d8ed78",
 		canvas: "#f4f7f3",
+		sectionLight: "#EAF1ED",
+		sectionDark: "#151E1B",
 		ink: "#1c2825",
 		muted: "#73807b",
 		border: "#e6ebe6",

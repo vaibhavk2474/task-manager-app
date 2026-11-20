@@ -10,8 +10,8 @@ export const createAppTheme = (mode: PaletteMode) => createTheme({
 		warning: { main: designTokens.color.warning },
 		error: { main: designTokens.color.danger },
 		background: mode === "light"
-			? { default: designTokens.color.canvas, paper: "#ffffff" }
-			: { default: "#111917", paper: "#19221f" },
+			? { default: designTokens.color.canvas, paper: "#ffffff", section: designTokens.color.sectionLight }
+			: { default: "#111917", paper: "#19221f", section: designTokens.color.sectionDark },
 		text: mode === "light"
 			? { primary: designTokens.color.ink, secondary: designTokens.color.muted }
 			: { primary: "#edf3ef", secondary: "#a2b0a9" },
