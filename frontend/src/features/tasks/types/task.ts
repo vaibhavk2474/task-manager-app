@@ -2,6 +2,7 @@ export type TaskStatus = "todo" | "in_progress" | "done";
 export type TaskPriority = "low" | "medium" | "high";
 export type TaskView = "all" | "today" | "upcoming" | "overdue" | "completed";
 export type TaskPageView = "overview" | TaskView;
+export type TaskSort = "due_soon" | "due_late" | "priority_high" | "priority_low" | "updated_newest" | "updated_oldest" | "title_asc" | "title_desc";
 
 export interface Task {
 	id: string;

@@ -3,12 +3,13 @@ import { Alert, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, 
 import { TaskShell } from "../../../shared/layouts/TaskShell";
 import { OverviewDashboard } from "../components/OverviewDashboard";
 import { TaskFilters } from "../components/TaskFilters";
+import { TaskSortSelect } from "../components/TaskSortSelect";
 import { TaskList } from "../components/TaskList";
 import { TaskTable } from "../components/TaskTable";
 import { TaskViewToggle, type TaskDisplayMode } from "../components/TaskViewToggle";
 import { TaskFormDialog } from "../components/TaskFormDialog";
 import { useTasks } from "../hooks/useTasks";
-import type { Task, TaskInput, TaskListResponse, TaskPageView, TaskView } from "../types/task";
+import type { Task, TaskInput, TaskListResponse, TaskPageView, TaskSort, TaskView } from "../types/task";
 
 const emptyPreviews: NonNullable<TaskListResponse["previews"]> = { today: [], upcoming: [], overdue: [] };
 const emptyCounts: TaskListResponse["counts"] = { all: 0, today: 0, upcoming: 0, overdue: 0, completed: 0 };
@@ -17,11 +18,12 @@ export const TasksPage = () => {
 	const [view, setView] = useState<TaskPageView>("overview");
 	const [search, setSearch] = useState("");
 	const [displayMode, setDisplayMode] = useState<TaskDisplayMode>("cards");
+	const [sort, setSort] = useState<TaskSort>("due_soon");
 	const [page, setPage] = useState(1);
 	const dashboard = view === "overview";
 	const pageSize = dashboard ? 1 : displayMode === "cards" ? 8 : 10;
 	const listView: TaskView = view === "overview" ? "all" : view;
-	const { tasks, counts, pagination, previews, isLoading, error, hasLoaded, refresh, create, update, remove } = useTasks(listView, dashboard ? "" : search, page, pageSize, dashboard);
+	const { tasks, counts, pagination, previews, isLoading, error, hasLoaded, refresh, create, update, remove } = useTasks(listView, dashboard ? "" : search, page, pageSize, dashboard, dashboard ? "due_soon" : sort);
 	const currentLoading = isLoading || (!hasLoaded && !error);
 	const [dialogOpen, setDialogOpen] = useState(false);
 	const [editingTask, setEditingTask] = useState<Task | null>(null);
@@ -42,6 +44,7 @@ export const TasksPage = () => {
 	const selectFilter = (nextView: TaskView) => { setPage(1); setView(nextView); };
 	const changeSearch = (nextSearch: string) => { setPage(1); setSearch(nextSearch); };
 	const changeDisplayMode = (nextMode: TaskDisplayMode) => { setPage(1); setDisplayMode(nextMode); };
+	const changeSort = (nextSort: TaskSort) => { setPage(1); setSort(nextSort); };
 
 	const openCreate = () => { setEditingTask(null); setDialogOpen(true); };
 	const openEdit = (task: Task) => { setEditingTask(task); setDialogOpen(true); };
@@ -83,19 +86,22 @@ export const TasksPage = () => {
 				</>
 			) : (
 				<Box sx={{ maxWidth: 1120, mx: "auto" }}>
-					<Stack direction={{ xs: "column", lg: "row" }} sx={{ alignItems: { xs: "stretch", lg: "flex-end" }, justifyContent: "space-between", gap: 2.5, mb: 3 }}>
-						<Box sx={{ minWidth: 0, flex: "1 1 auto" }}>
-							<Typography variant="overline" color="primary.main" sx={{ fontWeight: 800, letterSpacing: ".13em" }}>{now.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}</Typography>
-							<Typography variant="h3" component="h1" sx={{ mt: 0.4, fontSize: { xs: 32, sm: 40 } }}>All tasks</Typography>
-							<Typography color="text.secondary" sx={{ mt: 0.7 }}>Filter your work by deadline or completion status.</Typography>
-						</Box>
-						<Box sx={{ minWidth: 0, flex: "0 1 auto" }}><TaskFilters view={listView} counts={counts} onChange={selectFilter} /></Box>
+					<Stack spacing={2.5} sx={{ mb: 3 }}>
+						<Stack direction={{ xs: "column", sm: "row" }} sx={{ alignItems: { xs: "flex-start", sm: "center" }, justifyContent: "space-between", gap: 2 }}>
+							<Box sx={{ minWidth: 0, flex: "1 1 auto" }}>
+								<Typography variant="overline" color="primary.main" sx={{ fontWeight: 800, letterSpacing: ".13em" }}>{now.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}</Typography>
+								<Typography variant="h3" component="h1" sx={{ mt: 0.4, fontSize: { xs: 32, sm: 40 } }}>All tasks</Typography>
+								<Typography color="text.secondary" sx={{ mt: 0.7 }}>Filter your work by deadline or completion status.</Typography>
+							</Box>
+							<TaskViewToggle value={displayMode} onChange={changeDisplayMode} />
+						</Stack>
+						<Stack direction={{ xs: "column", md: "row" }} spacing={1.5} sx={{ minWidth: 0, alignItems: { xs: "stretch", md: "center" }, justifyContent: "space-between" }}>
+							<TaskFilters view={listView} counts={counts} onChange={selectFilter} />
+							<TaskSortSelect value={sort} onChange={changeSort} />
+						</Stack>
 					</Stack>
 
-					<Stack direction={{ xs: "column", sm: "row" }} sx={{ alignItems: { xs: "stretch", sm: "center" }, justifyContent: "space-between", mb: 1.5, gap: 1.5 }}>
-						<Box sx={{ minWidth: 0 }}><Typography variant="h6" sx={{ fontWeight: 800 }}>{search ? "Search results" : "Your task list"}</Typography><Typography variant="body2" color="text.secondary" sx={{ overflowWrap: "anywhere" }}>{search ? `Matching “${search}”` : "Keep the important things moving."}</Typography></Box>
-						<TaskViewToggle value={displayMode} onChange={changeDisplayMode} />
-					</Stack>
+					{search && <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5, overflowWrap: "anywhere" }}>Search results for “{search}”</Typography>}
 					{error && <Alert severity="error" role="alert" action={<Button color="inherit" size="small" onClick={() => void refresh()}>Try again</Button>} sx={{ mb: 2 }}>{error}</Alert>}
 					{!hasLoaded && error ? null : !hasLoaded ? (
 						<TaskList tasks={[]} view={listView} isLoading={currentLoading} search={search} now={now} onCreate={openCreate} onEdit={openEdit} onDelete={setDeleteTarget} onUpdate={updateTask} />

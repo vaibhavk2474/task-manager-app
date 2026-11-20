@@ -11,6 +11,8 @@ const isValidTimeZone = (timeZone: string) => {
 };
 
 const taskTimeZone = z.string().trim().min(1).max(80).refine(isValidTimeZone, "Invalid time zone.");
+export const taskSortOptions = ["due_soon", "due_late", "priority_high", "priority_low", "updated_newest", "updated_oldest", "title_asc", "title_desc"] as const;
+export type TaskSort = (typeof taskSortOptions)[number];
 
 const taskFields = {
 	title: z.string().trim().min(1, "Task title is required.").max(140),
@@ -52,6 +54,7 @@ export const updateTaskSchema = z.object({
 
 export const listTasksSchema = z.object({
 	view: z.enum(["all", "today", "upcoming", "overdue", "completed"]).default("all"),
+	sort: z.enum(taskSortOptions).default("due_soon"),
 	search: z.string().trim().max(120).default(""),
 	timeZone: z.string().trim().min(1).max(80).default("UTC").refine(isValidTimeZone, "Invalid time zone."),
 	page: z.coerce.number().int().min(1).default(1),

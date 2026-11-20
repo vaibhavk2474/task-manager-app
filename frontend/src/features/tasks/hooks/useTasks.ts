@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { tasksApi } from "../api/tasksApi";
-import type { Task, TaskInput, TaskListResponse, TaskView } from "../types/task";
+import type { Task, TaskInput, TaskListResponse, TaskSort, TaskView } from "../types/task";
 
 const emptyCounts: TaskListResponse["counts"] = { all: 0, today: 0, upcoming: 0, overdue: 0, completed: 0 };
 const emptyPagination: TaskListResponse["pagination"] = { page: 1, pageSize: 25, totalItems: 0, totalPages: 0 };
 
-export const useTasks = (view: TaskView, search: string, page: number, pageSize: number, includePreviews = false) => {
-	const queryKey = JSON.stringify([view, search, page, pageSize, includePreviews]);
+export const useTasks = (view: TaskView, search: string, page: number, pageSize: number, includePreviews = false, sort: TaskSort = "due_soon") => {
+	const queryKey = JSON.stringify([view, search, page, pageSize, includePreviews, sort]);
 	const [tasks, setTasks] = useState<Task[]>([]);
 	const [counts, setCounts] = useState(emptyCounts);
 	const [pagination, setPagination] = useState(emptyPagination);
@@ -19,7 +19,7 @@ export const useTasks = (view: TaskView, search: string, page: number, pageSize:
 		if (!background) setIsLoading(true);
 		setRequestError(null);
 		try {
-			const result = await tasksApi.list(view, search, page, pageSize, includePreviews);
+			const result = await tasksApi.list(view, search, page, pageSize, includePreviews, sort);
 			setTasks(result.tasks);
 			setCounts(result.counts);
 			setPagination(result.pagination);
@@ -28,7 +28,7 @@ export const useTasks = (view: TaskView, search: string, page: number, pageSize:
 		} catch (caught) {
 			setRequestError({ queryKey, message: caught instanceof Error ? caught.message : "Could not load your tasks." });
 		} finally { if (!background) setIsLoading(false); }
-	}, [view, search, page, pageSize, includePreviews, queryKey]);
+	}, [view, search, page, pageSize, includePreviews, sort, queryKey]);
 
 	useEffect(() => {
 		const timer = window.setTimeout(() => { void refresh(); }, 220);

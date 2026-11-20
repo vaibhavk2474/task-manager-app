@@ -1,6 +1,7 @@
 import type { QueryFilter } from "mongoose";
 import { taskRepository } from "./task.repository.js";
 import type { TaskAttributes, TaskPriority, TaskStatus } from "./task.model.js";
+import type { TaskSort } from "./task.schemas.js";
 
 type TaskFilter = QueryFilter<TaskAttributes>;
 type TaskView = "all" | "today" | "upcoming" | "overdue" | "completed";
@@ -106,7 +107,7 @@ const dueAtFromInput = (dateTime: string | null | undefined) => dateTime ? new D
 const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 export const taskService = {
-	async list(ownerId: string, view: TaskView, search: string, timeZone: string, requestedPage: number, pageSize: number, includePreviews: boolean) {
+	async list(ownerId: string, view: TaskView, search: string, timeZone: string, requestedPage: number, pageSize: number, includePreviews: boolean, sort: TaskSort) {
 		const now = new Date();
 		const window = getZonedDayWindow(now, timeZone);
 		const searchFilter: TaskFilter = search
@@ -151,7 +152,7 @@ export const taskService = {
 		const totalPages = Math.ceil(matchingViewTotal / pageSize);
 		const page = Math.min(requestedPage, Math.max(1, totalPages));
 		const [tasks, previews] = await Promise.all([
-			taskRepository.listForOwner(ownerId, filter, { skip: (page - 1) * pageSize, limit: pageSize }),
+			taskRepository.listForOwner(ownerId, filter, { skip: (page - 1) * pageSize, limit: pageSize }, sort),
 			includePreviews ? Promise.all([
 				taskRepository.listForOwner(ownerId, todayFilter, { skip: 0, limit: 4 }),
 				taskRepository.listForOwner(ownerId, upcomingFilter, { skip: 0, limit: 4 }),

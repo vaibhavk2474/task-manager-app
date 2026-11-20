@@ -16,7 +16,7 @@ const filters: { view: TaskView; label: string; count: keyof TaskListResponse["c
 ];
 
 export const TaskFilters = ({ view, counts, onChange }: TaskFiltersProps) => (
-	<Stack direction="row" role="group" aria-label="Filter tasks" sx={{ minWidth: 0, flexWrap: "wrap", justifyContent: { xs: "flex-start", lg: "flex-end" }, gap: 0.75 }}>
+	<Stack direction="row" role="group" aria-label="Filter tasks" sx={{ minWidth: 0, flexWrap: "wrap", justifyContent: "flex-start", gap: 0.75 }}>
 		{filters.map((filter) => {
 			const selected = view === filter.view;
 			return (

@@ -1,12 +1,12 @@
 import { apiRequest } from "../../../shared/api/client";
-import type { Task, TaskInput, TaskListResponse, TaskView } from "../types/task";
+import type { Task, TaskInput, TaskListResponse, TaskSort, TaskView } from "../types/task";
 
 const currentTimeZone = () => Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
 
 export const tasksApi = {
-	list: (view: TaskView, search: string, page: number, pageSize: number, includePreviews = false) => {
+	list: (view: TaskView, search: string, page: number, pageSize: number, includePreviews = false, sort: TaskSort = "due_soon") => {
 		const timeZone = currentTimeZone();
-		const params = new URLSearchParams({ view, search, timeZone, page: String(page), pageSize: String(pageSize), includePreviews: String(includePreviews) });
+		const params = new URLSearchParams({ view, sort, search, timeZone, page: String(page), pageSize: String(pageSize), includePreviews: String(includePreviews) });
 		return apiRequest<TaskListResponse>(`/api/tasks?${params.toString()}`);
 	},
 	create: (data: TaskInput) => apiRequest<{ task: Task }>("/api/tasks", { method: "POST", body: JSON.stringify({ ...data, timeZone: currentTimeZone() }) }),

@@ -1,6 +1,7 @@
 import type { RequestHandler } from "express";
 import { taskService, TaskServiceError } from "./task.service.js";
 import type { TaskPriority, TaskStatus } from "./task.model.js";
+import type { TaskSort } from "./task.schemas.js";
 
 const serializeTask = (task: { id: string; title: string; description: string; status: string; priority: string; dueDate?: Date | null; dueAt?: Date | null; createdAt: Date; updatedAt: Date }) => ({
 	id: task.id,
@@ -24,8 +25,8 @@ const respondWithError = (error: unknown, response: Parameters<RequestHandler>[1
 
 export const listTasks: RequestHandler = async (request, response, next) => {
 	try {
-		const filters = response.locals.taskFilters as { view: "all" | "today" | "upcoming" | "overdue" | "completed"; search: string; timeZone: string; page: number; pageSize: number; includePreviews: boolean };
-		const result = await taskService.list(request.session.userId!, filters.view, filters.search, filters.timeZone, filters.page, filters.pageSize, filters.includePreviews);
+		const filters = response.locals.taskFilters as { view: "all" | "today" | "upcoming" | "overdue" | "completed"; sort: TaskSort; search: string; timeZone: string; page: number; pageSize: number; includePreviews: boolean };
+		const result = await taskService.list(request.session.userId!, filters.view, filters.search, filters.timeZone, filters.page, filters.pageSize, filters.includePreviews, filters.sort);
 		response.json({
 			tasks: result.tasks.map(serializeTask),
 			counts: result.counts,

@@ -8,8 +8,8 @@ Task Manager is a personal workspace for turning work into clear, trackable task
 
 1. Register an account or sign in.
 2. Start at Overview to see today's focus, upcoming tasks, overdue work, and completion progress.
-3. Open All tasks and choose All tasks, Today, Upcoming, Overdue, or Completed from the filters beside the list heading.
-4. Switch between card and table layouts, and page through longer task lists.
+3. Open All tasks and choose All tasks, Today, Upcoming, Overdue, or Completed from the filters below the heading.
+4. Sort tasks by deadline, priority, last update, or title; switch between card and table layouts and page through longer lists.
 5. Create or edit a task with a title, description, status, priority, and optional due date and time.
 6. Mark a task complete, search the list, or delete a task.
 7. Sign out when finished.
