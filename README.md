@@ -12,7 +12,7 @@ A focused, full-stack task manager built with React, TypeScript, Vite, Material 
 - Store accounts, sessions, and tasks in MongoDB Atlas. Tasks are scoped to their owner on every API operation.
 - Change light/dark appearance. Shared colors, typography, spacing, and component defaults live in the central MUI theme.
 
-Password recovery, email delivery, local MongoDB, and browser task storage are not part of this application.
+Password recovery, email, subtasks, Goals, and a stronger password policy are not implemented in the current release. Subtasks, Goals, a stronger password policy, and forgot-password email recovery are tracked as low-priority future work; no email provider has been selected. Local MongoDB and browser task storage remain outside the application scope.
 
 ## Deadlines and overdue tasks
 

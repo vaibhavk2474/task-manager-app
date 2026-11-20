@@ -12,7 +12,7 @@ Read this file and `docs/architecture.md` first. Read `docs/product.md` for user
 - Every task query and mutation must include the signed-in user's ID. Add ownership checks when introducing endpoints.
 - Validate untrusted API input at the route boundary. Keep secrets in ignored environment files, never in source or docs.
 - Keep visual values in `frontend/src/theme/tokens.ts` and the MUI theme. Components should use semantic palette values and theme spacing.
-- This project has no password recovery or email feature. Do not add those modules unless a product request explicitly asks for them.
+- Password recovery and email are not implemented. They are recorded as low-priority future work; do not implement them unless a product request explicitly asks for implementation.
 
 ## Before finishing
 
@@ -28,7 +28,9 @@ Read this file and `docs/architecture.md` first. Read `docs/product.md` for user
 - Authentication supports registration, sign-in, session restore, and sign-out. Password recovery and email are intentionally absent.
 - Tasks are account-owned MongoDB records. The browser does not cache task data in `localStorage`.
 - The authenticated workspace opens on Overview. Sidebar navigation has only Overview and All tasks; Today, Upcoming, Overdue, and Completed are filters in the All tasks view. Dashboard links select the relevant task filter and keep All tasks active in navigation.
+- Current auth/API security controls and their limits are documented in `docs/architecture.md`; preserve them when changing routes, sessions, or task ownership. Do not describe the baseline as a complete security audit.
 - All tasks offers card and table layouts with server-side sorting and pagination. Apply validated sorting in MongoDB before offset pagination; keep owner-scoped totals and filter counts accurate, preserve the Overview preview query, and reset to the first page when sorting or the result set changes.
 - The Overview dashboard derives today, upcoming, and overdue previews from the account's task list and shows completion progress; keep its date grouping consistent with the time-zone-aware task filters.
 - Tasks may have an optional all-day or timed deadline. `dueDate` stores the calendar day as a UTC-noon marker; `dueAt` stores the exact UTC instant for a timed deadline and stays null for all-day deadlines. Keep both fields paired on updates. New deadlines must be today or later, and timed deadlines must be strictly in the future. An existing past deadline may stay unchanged during an edit. Overdue applies only to open tasks: all-day tasks become overdue the day after the selected date in the user's time zone; timed tasks become overdue when their instant passes. No deadline means never overdue.
+- Low-priority ideas, not implemented features: embedded task subtasks, a separate Goals section with optional task-to-goal association, a stronger password policy, and forgot-password email recovery. Check `docs/roadmap.md` and `docs/ai-workflow.md` for the agreed design boundaries before proposing implementation.
 - See `docs/product.md`, `docs/architecture.md`, and `docs/roadmap.md` for the current scope and next steps.

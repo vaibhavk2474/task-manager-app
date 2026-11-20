@@ -44,6 +44,21 @@ Read AGENTS.md, docs/product.md, and the relevant architecture section. Keep dat
 - Never paste Atlas credentials, session secrets, or real task data into prompts or docs.
 - When pausing, record goal, current state, decisions, next files, and checks in the issue/chat. Put durable product/architecture decisions in docs, not chat transcripts.
 
+## Security review guidance
+
+- Read the **Current security baseline and known limits** section of `docs/architecture.md` before changing authentication, sessions, middleware, or API routes. Distinguish protections already implemented from the hardening backlog; do not imply that planned controls already exist.
+- Keep task reads and writes owner-scoped, validate untrusted input at the route boundary, and preserve same-origin checks on state-changing requests. Do not move sessions or task data into browser storage or expose credentials in source, logs, or documentation.
+- Production API traffic is routed through the Vercel same-origin rewrite. Do not add wildcard CORS or relax `APP_ORIGIN` checks without an explicit architecture change.
+- The existing auth limiter only covers sign-up/sign-in and uses a per-process memory store. Do not present it as a global or distributed API limit. Any future recovery endpoint needs its own abuse controls and must not reveal whether an email is registered.
+- For future password work, confirm hashing compatibility with the accepted length, favor passphrases and common/compromised-password rejection over character-class rules, and enforce the same policy in both frontend guidance and backend validation.
+
+## Deferred task model guidance
+
+- Subtasks and Goals are **planned, not implemented**. Do not add their schema, routes, UI, or navigation without a product request to start implementation.
+- The current proposal embeds ordered subtasks in the parent task, inheriting the parent's owner and optional goal association. Keep each parent as one main-list item; show checklist progress in cards/table and edit individual items in the task dialog. First version has no independent subtask owner, deadline, priority, or status.
+- Goals are proposed as a separate owner-scoped entity, with an optional association from a task to one goal. Leave tasks unassigned when appropriate. Label derived progress as completed linked tasks / total linked tasks, not as a direct measure of goal achievement.
+- Stronger password policy and forgot-password email are low-priority future features. Password recovery is not present today; an implementation needs a provider decision, single-use expiring reset tokens stored only as hashes, generic responses, request throttling, and session invalidation after reset.
+
 ## Task deadline guidance
 
 - Read the deadline semantics in `AGENTS.md` and `docs/architecture.md` before changing deadline behavior.

@@ -22,7 +22,7 @@ Task Manager is a personal workspace for turning work into clear, trackable task
 - New deadlines must be today or later; timed deadlines must be strictly later than the current instant. Editing another field on an already overdue task is allowed when its past deadline is left unchanged. The date and time controls explain these rules and identify invalid values inline.
 - Overdue counts and filters include open tasks only and use the time zone supplied by the signed-in user's browser.
 - The browser does not persist task records or authentication tokens in local storage.
-- Password recovery, email, collaboration, attachments, recurring tasks, and notifications are outside the first release.
+- Password recovery, email, subtasks, Goals, collaboration, attachments, recurring tasks, and notifications are not implemented in the current release. Subtasks, Goals, a stronger password policy, and forgot-password email recovery are tracked as low-priority future work; see `docs/roadmap.md` for the proposed boundaries. No email provider has been selected.
 - If Atlas is not configured or reachable, the API reports a clear startup error rather than silently falling back to browser storage.
 
 ## Product principles
@@ -32,3 +32,4 @@ Task Manager is a personal workspace for turning work into clear, trackable task
 - Keep the interface accessible, responsive, and visually consistent through shared theme tokens.
 - Distinguish an empty result from loading and failed requests. Announce loading and errors accessibly, provide a retry action for failed task queries, and keep task actions keyboard-operable.
 - Protect account-owned data at the API boundary.
+- Keep security documentation explicit about what is implemented and what remains planned; do not present baseline controls as a complete security audit.

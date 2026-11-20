@@ -16,6 +16,16 @@ This is a planning guide, not a commitment. Keep each milestone small and based 
 - Bulk task actions.
 - Bulk completion and keyboard shortcuts.
 
-## 3. Larger features
+## 3. Low-priority future work
 
-Recurring tasks, labels, projects, reminders, exports, and collaboration require a specific user story and data/privacy decisions before implementation.
+### Task planning
+
+- **Subtasks:** Add an ordered checklist embedded in its parent task. Keep the parent as the sole task-list item, show completed/total progress in cards and table, and manage checklist entries in the task dialog. Subtasks inherit the parent task's owner and any goal association; do not give them their own deadlines, priorities, or statuses in the first version.
+- **Goals:** Add a separate owner-scoped Goals section and let each task optionally link to one goal. Show progress as completed linked tasks out of total linked tasks, clearly described as task progress rather than measured goal achievement.
+- Recurring tasks, labels, projects, reminders, exports, and collaboration need a specific user story and data/privacy decisions before being scheduled.
+
+### Account security and recovery
+
+- **Stronger password policy:** Revisit the current 8-character minimum. Proposed password-only baseline follows NIST guidance: at least 15 characters, allow at least 64, reject common or compromised choices, and avoid arbitrary character-class rules. Confirm hashing compatibility, then enforce the final policy in both the API and sign-up UI; see `docs/architecture.md` for the standard reference.
+- **Forgot password:** Add a secure recovery flow using short-lived, single-use reset tokens stored as hashes, generic responses that do not reveal whether an account exists, request throttling, and session invalidation after reset. Select an email provider when this work is scheduled; none is currently chosen.
+- **Security hardening:** Consider a shared rate-limit store for multi-instance deployments, endpoint-appropriate rate limits for task APIs, an absolute session lifetime in addition to the current rolling expiry, and less account-specific registration errors.
