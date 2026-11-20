@@ -32,6 +32,9 @@ export const createAppTheme = (mode: PaletteMode) => createTheme({
 				"*": { boxSizing: "border-box" },
 				body: { minWidth: 320, minHeight: "100vh" },
 				"::selection": { backgroundColor: designTokens.color.accent, color: designTokens.color.ink },
+				"@media (prefers-reduced-motion: reduce)": {
+					"*, *::before, *::after": { scrollBehavior: "auto !important", animationDuration: "0.01ms !important", animationIterationCount: "1 !important", transitionDuration: "0.01ms !important" },
+				},
 			},
 		},
 		MuiButton: {

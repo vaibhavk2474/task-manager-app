@@ -22,8 +22,8 @@ export const SignUpPage = () => {
 
 	return (
 		<AuthLayout title="Make room for what matters" subtitle="Create your account and start with one clear next step." footer={<Typography variant="body2" color="text.secondary" sx={{ textAlign: "center" }}>Already have an account? <Link component={RouterLink} to="/sign-in" underline="hover" sx={{ fontWeight: 700 }}>Sign in</Link></Typography>}>
-			<Stack component="form" spacing={2} onSubmit={submit}>
-				{error && <Alert severity="error">{error}</Alert>}
+			<Stack component="form" aria-busy={busy} spacing={2} onSubmit={submit}>
+				{error && <Alert severity="error" role="alert">{error}</Alert>}
 				<TextField label="Your name" autoComplete="name" required fullWidth value={name} onChange={(event) => setName(event.target.value)} />
 				<TextField label="Email" type="email" autoComplete="email" required fullWidth value={email} onChange={(event) => setEmail(event.target.value)} />
 				<TextField label="Password" type="password" autoComplete="new-password" required fullWidth slotProps={{ htmlInput: { minLength: 8, maxLength: 72 } }} helperText="Use at least 8 characters." value={password} onChange={(event) => setPassword(event.target.value)} />

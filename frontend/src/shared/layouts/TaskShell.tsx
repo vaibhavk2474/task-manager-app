@@ -45,14 +45,16 @@ export const TaskShell = ({ children, view, onViewChange, search, onSearchChange
 			</Box>
 			<Box sx={{ px: 2, pb: 2 }}><Button fullWidth startIcon={<AddRoundedIcon />} variant="contained" onClick={onCreateTask}>New task</Button></Box>
 			<Typography variant="overline" color="text.secondary" sx={{ px: 2.5, pb: 0.75, fontWeight: 700, letterSpacing: ".12em" }}>WORKSPACE</Typography>
-			<List sx={{ px: 1.25, py: 0 }}>
-				{navItems.map(({ key, label, Icon }) => (
-					<ListItemButton key={key} selected={key === (view === "overview" ? "overview" : "all")} onClick={() => { onViewChange(key); setMobileOpen(false); }} sx={{ borderRadius: 2.5, mb: 0.5, minHeight: 46, "&.Mui-selected": { bgcolor: "action.selected", color: "primary.main" }, "&.Mui-selected:hover": { bgcolor: "action.selected" } }}>
-						<ListItemIcon sx={{ minWidth: 38, color: "inherit" }}><Icon fontSize="small" /></ListItemIcon>
-						<ListItemText primary={label} sx={{ "& .MuiListItemText-primary": { fontSize: 14, fontWeight: key === (view === "overview" ? "overview" : "all") ? 700 : 550 } }} />
-					</ListItemButton>
-				))}
-			</List>
+			<Box component="nav" aria-label="Workspace navigation">
+				<List sx={{ px: 1.25, py: 0 }}>
+					{navItems.map(({ key, label, Icon }) => (
+						<ListItemButton key={key} selected={key === (view === "overview" ? "overview" : "all")} aria-current={key === (view === "overview" ? "overview" : "all") ? "page" : undefined} onClick={() => { onViewChange(key); setMobileOpen(false); }} sx={{ borderRadius: 2.5, mb: 0.5, minHeight: 46, "&.Mui-selected": { bgcolor: "action.selected", color: "primary.main" }, "&.Mui-selected:hover": { bgcolor: "action.selected" } }}>
+							<ListItemIcon sx={{ minWidth: 38, color: "inherit" }}><Icon fontSize="small" /></ListItemIcon>
+							<ListItemText primary={label} sx={{ "& .MuiListItemText-primary": { fontSize: 14, fontWeight: key === (view === "overview" ? "overview" : "all") ? 700 : 550 } }} />
+						</ListItemButton>
+					))}
+				</List>
+			</Box>
 			<Box sx={{ mt: "auto", p: 1.5 }}>
 				<Divider sx={{ mb: 1.5 }} />
 				<Box sx={{ display: "flex", alignItems: "center", gap: 1.2, p: 1 }}>
@@ -77,7 +79,7 @@ export const TaskShell = ({ children, view, onViewChange, search, onSearchChange
 						<Typography variant="body2" sx={{ fontWeight: 700 }}>{view === "overview" ? "Overview" : "All tasks"}</Typography>
 					</Box>
 					<Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-						{showSearch && <TextField size="small" placeholder="Search tasks" value={search} onChange={(event) => onSearchChange(event.target.value)} sx={{ width: { xs: 128, sm: 230 }, "& .MuiOutlinedInput-root": { bgcolor: "background.default" } }} slotProps={{ input: { startAdornment: <InputAdornment position="start"><SearchRoundedIcon fontSize="small" color="action" /></InputAdornment> } }} />}
+						{showSearch && <TextField type="search" size="small" placeholder="Search tasks" value={search} onChange={(event) => onSearchChange(event.target.value)} sx={{ width: { xs: 128, sm: 230 }, "& .MuiOutlinedInput-root": { bgcolor: "background.default" } }} slotProps={{ input: { startAdornment: <InputAdornment position="start"><SearchRoundedIcon fontSize="small" color="action" /></InputAdornment> }, htmlInput: { "aria-label": "Search tasks" } }} />}
 						<Button variant="contained" startIcon={<AddRoundedIcon />} onClick={onCreateTask} sx={{ display: { xs: "none", sm: "inline-flex" } }}>New task</Button>
 					</Box>
 				</Box>

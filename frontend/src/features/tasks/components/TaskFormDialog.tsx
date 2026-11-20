@@ -55,8 +55,8 @@ export const TaskFormDialog = ({ open, task, isSaving, onClose, onSubmit }: Task
 		<Dialog open={open} onClose={isSaving ? undefined : onClose} fullWidth maxWidth="sm">
 			<DialogTitle sx={{ pb: 0.5, fontWeight: 800 }}>{task ? "Edit task" : "Create a task"}</DialogTitle>
 			<DialogContent sx={{ pt: "18px !important" }}>
-				<Stack component="form" id="task-form" spacing={2.25} onSubmit={submit}>
-					{error && <Alert severity="error">{error}</Alert>}
+				<Stack component="form" id="task-form" aria-busy={isSaving} spacing={2.25} onSubmit={submit}>
+					{error && <Alert severity="error" role="alert">{error}</Alert>}
 					<TextField autoFocus label="Task title" placeholder="What needs to get done?" required fullWidth value={form.title} onChange={(event) => setField("title", event.target.value)} slotProps={{ htmlInput: { maxLength: 140 } }} />
 					<TextField label="Details" placeholder="Add a little context or a next step…" fullWidth multiline minRows={3} value={form.description} onChange={(event) => setField("description", event.target.value)} slotProps={{ htmlInput: { maxLength: 4000 } }} />
 					<Stack direction={{ xs: "column", sm: "row" }} spacing={2}>

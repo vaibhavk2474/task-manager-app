@@ -30,4 +30,5 @@ Task Manager is a personal workspace for turning work into clear, trackable task
 - Make adding and updating a task quick.
 - Show task status and priority clearly.
 - Keep the interface accessible, responsive, and visually consistent through shared theme tokens.
+- Distinguish an empty result from loading and failed requests. Announce loading and errors accessibly, provide a retry action for failed task queries, and keep task actions keyboard-operable.
 - Protect account-owned data at the API boundary.

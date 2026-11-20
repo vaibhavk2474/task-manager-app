@@ -11,6 +11,7 @@ import { useTasks } from "../hooks/useTasks";
 import type { Task, TaskInput, TaskListResponse, TaskPageView, TaskView } from "../types/task";
 
 const emptyPreviews: NonNullable<TaskListResponse["previews"]> = { today: [], upcoming: [], overdue: [] };
+const emptyCounts: TaskListResponse["counts"] = { all: 0, today: 0, upcoming: 0, overdue: 0, completed: 0 };
 
 export const TasksPage = () => {
 	const [view, setView] = useState<TaskPageView>("overview");
@@ -20,7 +21,8 @@ export const TasksPage = () => {
 	const dashboard = view === "overview";
 	const pageSize = dashboard ? 1 : displayMode === "cards" ? 8 : 10;
 	const listView: TaskView = view === "overview" ? "all" : view;
-	const { tasks, counts, pagination, previews, isLoading, error, create, update, remove } = useTasks(listView, dashboard ? "" : search, page, pageSize, dashboard);
+	const { tasks, counts, pagination, previews, isLoading, error, hasLoaded, refresh, create, update, remove } = useTasks(listView, dashboard ? "" : search, page, pageSize, dashboard);
+	const currentLoading = isLoading || (!hasLoaded && !error);
 	const [dialogOpen, setDialogOpen] = useState(false);
 	const [editingTask, setEditingTask] = useState<Task | null>(null);
 	const [saving, setSaving] = useState(false);
@@ -76,8 +78,8 @@ export const TasksPage = () => {
 		<TaskShell view={view} onViewChange={navigate} search={search} onSearchChange={changeSearch} onCreateTask={openCreate} showSearch={!dashboard}>
 			{dashboard ? (
 				<>
-					{error && <Alert severity="error" sx={{ maxWidth: 1120, mx: "auto", mb: 2 }}>{error}</Alert>}
-					<OverviewDashboard previews={previews ?? emptyPreviews} counts={counts} isLoading={isLoading} now={now} onViewChange={navigate} onCreate={openCreate} onEdit={openEdit} onDelete={setDeleteTarget} onUpdate={updateTask} />
+					{error && <Alert severity="error" role="alert" action={<Button color="inherit" size="small" onClick={() => void refresh()}>Try again</Button>} sx={{ maxWidth: 1120, mx: "auto", mb: 2 }}>{error}</Alert>}
+					{!hasLoaded && error ? null : <OverviewDashboard previews={hasLoaded ? previews ?? emptyPreviews : emptyPreviews} counts={hasLoaded ? counts : emptyCounts} isLoading={currentLoading} now={now} onViewChange={navigate} onCreate={openCreate} onEdit={openEdit} onDelete={setDeleteTarget} onUpdate={updateTask} />}
 				</>
 			) : (
 				<Box sx={{ maxWidth: 1120, mx: "auto" }}>
@@ -94,16 +96,18 @@ export const TasksPage = () => {
 						<Box sx={{ minWidth: 0 }}><Typography variant="h6" sx={{ fontWeight: 800 }}>{search ? "Search results" : "Your task list"}</Typography><Typography variant="body2" color="text.secondary" sx={{ overflowWrap: "anywhere" }}>{search ? `Matching “${search}”` : "Keep the important things moving."}</Typography></Box>
 						<TaskViewToggle value={displayMode} onChange={changeDisplayMode} />
 					</Stack>
-					{error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-					{pagination.totalItems === 0 ? (
+					{error && <Alert severity="error" role="alert" action={<Button color="inherit" size="small" onClick={() => void refresh()}>Try again</Button>} sx={{ mb: 2 }}>{error}</Alert>}
+					{!hasLoaded && error ? null : !hasLoaded ? (
+						<TaskList tasks={[]} view={listView} isLoading={currentLoading} search={search} now={now} onCreate={openCreate} onEdit={openEdit} onDelete={setDeleteTarget} onUpdate={updateTask} />
+					) : pagination.totalItems === 0 ? (
 						<TaskList tasks={[]} view={listView} isLoading={isLoading} search={search} now={now} onCreate={openCreate} onEdit={openEdit} onDelete={setDeleteTarget} onUpdate={updateTask} />
 					) : displayMode === "cards" ? (
 						<TaskList tasks={tasks} view={listView} isLoading={isLoading} search={search} now={now} onCreate={openCreate} onEdit={openEdit} onDelete={setDeleteTarget} onUpdate={updateTask} />
 					) : (
 						<TaskTable tasks={tasks} isLoading={isLoading} now={now} onEdit={openEdit} onDelete={setDeleteTarget} onUpdate={updateTask} />
 					)}
-					{pagination.totalItems > 0 && <Stack direction={{ xs: "column", sm: "row" }} sx={{ alignItems: { xs: "flex-start", sm: "center" }, justifyContent: "space-between", gap: 1.5, mt: 2.5 }}>
-						<Typography variant="body2" color="text.secondary">Showing {rangeStart}–{rangeEnd} of {pagination.totalItems} tasks</Typography>
+					{hasLoaded && pagination.totalItems > 0 && <Stack direction={{ xs: "column", sm: "row" }} sx={{ alignItems: { xs: "flex-start", sm: "center" }, justifyContent: "space-between", gap: 1.5, mt: 2.5 }}>
+						<Typography variant="body2" color="text.secondary" aria-live="polite">Showing {rangeStart}–{rangeEnd} of {pagination.totalItems} tasks</Typography>
 						{pageCount > 1 && <Pagination count={pageCount} page={currentPage} onChange={(_event, nextPage) => setPage(nextPage)} color="primary" size="small" shape="rounded" aria-label="Task pages" />}
 					</Stack>}
 				</Box>
@@ -115,8 +119,8 @@ export const TasksPage = () => {
 				<DialogContent><Typography color="text.secondary">“{deleteTarget?.title}” will be permanently removed from your workspace.</Typography></DialogContent>
 				<DialogActions sx={{ p: 2.5, pt: 1 }}><Button onClick={() => setDeleteTarget(null)} disabled={deleting}>Keep task</Button><Button color="error" variant="contained" onClick={() => void confirmDelete()} disabled={deleting}>{deleting ? "Deleting…" : "Delete task"}</Button></DialogActions>
 			</Dialog>
-			<Snackbar open={Boolean(toast)} autoHideDuration={3600} onClose={() => setToast(null)} anchorOrigin={{ vertical: "bottom", horizontal: "right" }}>
-				{toast ? <Alert severity={toast.severity} variant="filled" onClose={() => setToast(null)}>{toast.message}</Alert> : undefined}
+			<Snackbar open={Boolean(toast)} autoHideDuration={6000} onClose={() => setToast(null)} anchorOrigin={{ vertical: "bottom", horizontal: "right" }}>
+				{toast ? <Alert role={toast.severity === "error" ? "alert" : "status"} severity={toast.severity} variant="filled" onClose={() => setToast(null)}>{toast.message}</Alert> : undefined}
 			</Snackbar>
 		</TaskShell>
 	);

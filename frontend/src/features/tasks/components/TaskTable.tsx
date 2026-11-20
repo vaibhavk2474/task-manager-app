@@ -1,4 +1,4 @@
-import { Box, Button, Card, Checkbox, Chip, IconButton, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material";
+import { Box, Button, Card, Checkbox, Chip, IconButton, LinearProgress, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import type { Task, TaskInput } from "../types/task";
@@ -17,8 +17,10 @@ const priorityColor = (priority: Task["priority"]): "default" | "warning" | "err
 const statusLabel = (status: Task["status"]) => status === "in_progress" ? "In progress" : status === "done" ? "Completed" : "To do";
 
 export const TaskTable = ({ tasks, isLoading, now, onEdit, onDelete, onUpdate }: TaskTableProps) => (
-	<Card variant="outlined" sx={{ borderColor: "divider", overflow: "hidden", opacity: isLoading ? 0.6 : 1, transition: "opacity 160ms ease" }}>
-		<TableContainer sx={{ overflowX: "auto" }}>
+	<Card variant="outlined" aria-busy={isLoading} sx={{ borderColor: "divider", overflow: "hidden", opacity: isLoading ? 0.6 : 1, transition: "opacity 160ms ease" }}>
+		{isLoading && <LinearProgress aria-label="Updating tasks" />}
+		{isLoading && <Typography role="status" sx={{ position: "absolute", width: "1px", height: "1px", p: 0, m: -1, overflow: "hidden", clip: "rect(0, 0, 0, 0)", whiteSpace: "nowrap", border: 0 }}>Updating tasks</Typography>}
+		<TableContainer role="region" aria-label="Scrollable task table" tabIndex={0} sx={{ overflowX: "auto", "&:focus-visible": { outline: "2px solid", outlineColor: "primary.main", outlineOffset: -2 } }}>
 		<Table aria-label="Tasks" sx={{ minWidth: 720 }}>
 			<TableHead>
 				<TableRow>

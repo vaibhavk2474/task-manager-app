@@ -21,8 +21,8 @@ export const SignInPage = () => {
 
 	return (
 		<AuthLayout title="Welcome back" subtitle="Pick up where you left off." footer={<Typography variant="body2" color="text.secondary" sx={{ textAlign: "center" }}>New to Task Manager? <Link component={RouterLink} to="/sign-up" underline="hover" sx={{ fontWeight: 700 }}>Create an account</Link></Typography>}>
-			<Stack component="form" spacing={2} onSubmit={submit}>
-				{error && <Alert severity="error">{error}</Alert>}
+			<Stack component="form" aria-busy={busy} spacing={2} onSubmit={submit}>
+				{error && <Alert severity="error" role="alert">{error}</Alert>}
 				<TextField label="Email" type="email" autoComplete="email" required fullWidth value={email} onChange={(event) => setEmail(event.target.value)} />
 				<TextField label="Password" type="password" autoComplete="current-password" required fullWidth value={password} onChange={(event) => setPassword(event.target.value)} />
 				<Button type="submit" variant="contained" size="large" disabled={busy}>{busy ? "Signing in…" : "Sign in"}</Button>

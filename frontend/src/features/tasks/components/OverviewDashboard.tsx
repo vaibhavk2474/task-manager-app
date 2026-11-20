@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Box, Button, Card, CardActionArea, CardContent, LinearProgress, Stack, Typography } from "@mui/material";
+import { Box, Button, Card, CardActionArea, CardContent, LinearProgress, Skeleton, Stack, Typography } from "@mui/material";
 import EventAvailableOutlinedIcon from "@mui/icons-material/EventAvailableOutlined";
 import EventBusyOutlinedIcon from "@mui/icons-material/EventBusyOutlined";
 import EventNoteOutlinedIcon from "@mui/icons-material/EventNoteOutlined";
@@ -39,19 +39,19 @@ export const OverviewDashboard = ({ previews, counts, isLoading, now, onViewChan
 			</Stack>
 
 			<Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", xl: "repeat(4, 1fr)" }, gap: 1.5 }}>
-				<SummaryCard label="Due today" value={String(counts.today)} note="Plan your next steps" icon={<EventAvailableOutlinedIcon />} onClick={() => onViewChange("today")} />
-				<SummaryCard label="Upcoming" value={String(counts.upcoming)} note="Tasks scheduled ahead" icon={<EventNoteOutlinedIcon />} onClick={() => onViewChange("upcoming")} />
-				<SummaryCard label="Overdue" value={String(counts.overdue)} note={counts.overdue ? "Review what needs attention" : "You are all caught up"} icon={<EventBusyOutlinedIcon />} alert={counts.overdue > 0} onClick={() => onViewChange("overdue")} />
-				<SummaryCard label="Completed" value={`${completionRate}%`} note={`${counts.completed} of ${counts.all} tasks`} icon={<InsightsRoundedIcon />} onClick={() => onViewChange("completed")} />
+				<SummaryCard isLoading={isLoading} label="Due today" value={String(counts.today)} note="Plan your next steps" icon={<EventAvailableOutlinedIcon />} onClick={() => onViewChange("today")} />
+				<SummaryCard isLoading={isLoading} label="Upcoming" value={String(counts.upcoming)} note="Tasks scheduled ahead" icon={<EventNoteOutlinedIcon />} onClick={() => onViewChange("upcoming")} />
+				<SummaryCard isLoading={isLoading} label="Overdue" value={String(counts.overdue)} note={counts.overdue ? "Review what needs attention" : "You are all caught up"} icon={<EventBusyOutlinedIcon />} alert={counts.overdue > 0} onClick={() => onViewChange("overdue")} />
+				<SummaryCard isLoading={isLoading} label="Completed" value={`${completionRate}%`} note={`${counts.completed} of ${counts.all} tasks`} icon={<InsightsRoundedIcon />} onClick={() => onViewChange("completed")} />
 			</Box>
 
 			<Card variant="outlined" sx={{ borderColor: "divider" }}>
 				<CardContent sx={{ p: { xs: 2, sm: 2.5 } }}>
 					<Stack direction="row" sx={{ alignItems: "center", justifyContent: "space-between", gap: 2, mb: 1.25 }}>
-						<Box><Typography variant="subtitle1" sx={{ fontWeight: 750 }}>Your progress</Typography><Typography variant="body2" color="text.secondary">{counts.completed} completed · {openCount} still open</Typography></Box>
-						<Typography variant="h5" sx={{ color: "primary.main", fontWeight: 800 }}>{completionRate}%</Typography>
+						<Box><Typography variant="subtitle1" sx={{ fontWeight: 750 }}>Your progress</Typography><Typography variant="body2" color="text.secondary">{isLoading ? <Skeleton width={150} /> : `${counts.completed} completed · ${openCount} still open`}</Typography></Box>
+						<Typography variant="h5" sx={{ color: "primary.main", fontWeight: 800 }}>{isLoading ? <Skeleton width={56} /> : `${completionRate}%`}</Typography>
 					</Stack>
-					<LinearProgress variant="determinate" value={completionRate} sx={{ height: 8, borderRadius: 99, bgcolor: "action.hover", "& .MuiLinearProgress-bar": { borderRadius: 99 } }} aria-label="Task completion progress" />
+					<LinearProgress variant={isLoading ? "indeterminate" : "determinate"} value={completionRate} sx={{ height: 8, borderRadius: 99, bgcolor: "action.hover", "& .MuiLinearProgress-bar": { borderRadius: 99 } }} aria-label={isLoading ? "Loading task completion progress" : `Task completion progress: ${completionRate}%`} aria-busy={isLoading} />
 				</CardContent>
 			</Card>
 
@@ -84,12 +84,12 @@ const TaskSection = ({ title, count, onViewAll, children }: { title: string; cou
 	</Stack>
 );
 
-const SummaryCard = ({ label, value, note, icon, alert = false, onClick }: { label: string; value: string; note: string; icon: ReactNode; alert?: boolean; onClick: () => void }) => (
+const SummaryCard = ({ label, value, note, icon, alert = false, isLoading, onClick }: { label: string; value: string; note: string; icon: ReactNode; alert?: boolean; isLoading: boolean; onClick: () => void }) => (
 	<Card variant="outlined" sx={{ borderColor: "divider", height: "100%", minHeight: 116 }}>
-		<CardActionArea onClick={onClick} sx={{ height: "100%" }}>
+		<CardActionArea onClick={onClick} disabled={isLoading} sx={{ height: "100%" }}>
 			<CardContent sx={{ p: "18px 20px !important" }}>
 				<Stack direction="row" sx={{ alignItems: "flex-start", justifyContent: "space-between", gap: 1 }}>
-					<Box><Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }}>{label}</Typography><Typography variant="h4" sx={{ mt: 0.8, color: alert ? "error.main" : "text.primary" }}>{value}</Typography><Typography variant="caption" color="text.secondary">{note}</Typography></Box>
+					<Box><Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }}>{label}</Typography><Typography variant="h4" sx={{ mt: 0.8, color: alert ? "error.main" : "text.primary" }}>{isLoading ? <Skeleton width={60} /> : value}</Typography><Typography variant="caption" color="text.secondary">{isLoading ? <Skeleton width={120} /> : note}</Typography></Box>
 					<Box sx={{ width: 40, height: 40, flexShrink: 0, borderRadius: 2.5, display: "grid", placeItems: "center", bgcolor: alert ? "error.main" : "action.hover", color: alert ? "error.contrastText" : "primary.main" }}>{icon}</Box>
 				</Stack>
 			</CardContent>
